@@ -7,6 +7,12 @@
 //
 //****************************************************************************
 
+/* DEBUG:
+ * - test sensing frequency - figure out max freq
+ * - test control frequency
+ * - test comms frequency
+ * - test 2x pin control for each valve
+ */
 
 /* TODO:
  * - add joint potentiometer code (initialization needed?)
@@ -39,16 +45,15 @@ void main(void) {
             sensorFlag = 0; // clear sensor flag
             sendDataCount++; // increment sensor flag
 
-            if (sendDataCount == 5) { // 100 Hz
+            if (sendDataCount == 10) { // 100 Hz
                 sendData(5); // send sensor data
                 sendDataCount = 0; // reset sensor flag
+                MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN0); // toggle red LED
             }
         }
         if (controlFlag) {
             controlUpdate(); // update control
             controlFlag = 0; // clear control flag
-            MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P2, GPIO_PIN0);
-
         }
         if (updateValuesFlag) {
             updateValues(); // update pressure setpoint values
@@ -60,7 +65,7 @@ void main(void) {
             MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN2);
         }
         else {
-            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN2);
+            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN2); // turn on blue LED
         }
     }
 }

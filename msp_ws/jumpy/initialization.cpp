@@ -87,12 +87,12 @@ const Timer_A_PWMConfig pwmTimerConfig5 =
     0
 };
 
-// sensor measurement timer configuration: 500 Hz
+// sensor measurement timer configuration: 100 Hz
 const Timer_A_UpModeConfig sensorTimerConfig = // configure timer A in up mode
 {
     TIMER_A_CLOCKSOURCE_SMCLK,          // tie timer A to SMCLK
     TIMER_A_CLOCKSOURCE_DIVIDER_1,      // increment counter every 4 clock cycles
-    3000,                                // period of timer A
+    15000,                              // period of timer A
     TIMER_A_TAIE_INTERRUPT_DISABLE,     // disable timer A rollover interrupt
     TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE, // enable capture compare interrupt
     TIMER_A_DO_CLEAR                    // clear counter upon initialization

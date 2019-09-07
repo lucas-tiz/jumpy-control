@@ -62,7 +62,7 @@ void EUSCIA0_IRQHandler(void) {
 
 // update values based on received UART data
 void updateValues(void) { // TODO: change function name?
-    MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN0); // toggle red LED
+    MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P2, GPIO_PIN1); // toggle green LED
 
     switch ((int)uart_rx[0] & 255) { // LSbyte indicates message type
         volatile float *start;

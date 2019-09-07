@@ -109,7 +109,7 @@ comms.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/lib
 comms.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/__undef_macros
 comms.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/__undef_macros
 comms.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/array
-comms.obj: /home/lucas/catkin_ws/src/jumpy/mcu_uart/include/mcu_uart/byte_stuff.hpp
+comms.obj: /home/lucas/catkin_ws/src/jumpy/mcu_uart_jumpy/include/mcu_uart/byte_stuff.hpp
 comms.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/sstream
 comms.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/ostream
 comms.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/ios
@@ -283,7 +283,7 @@ comms.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/lib
 /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/__undef_macros: 
 /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/__undef_macros: 
 /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/array: 
-/home/lucas/catkin_ws/src/jumpy/mcu_uart/include/mcu_uart/byte_stuff.hpp: 
+/home/lucas/catkin_ws/src/jumpy/mcu_uart_jumpy/include/mcu_uart/byte_stuff.hpp: 
 /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/sstream: 
 /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/ostream: 
 /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/ios: 

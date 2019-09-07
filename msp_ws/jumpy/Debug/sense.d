@@ -109,7 +109,7 @@ sense.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/lib
 sense.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/__undef_macros
 sense.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/__undef_macros
 sense.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/array
-sense.obj: /home/lucas/catkin_ws/src/jumpy/mcu_uart/include/mcu_uart/device_conversion.hpp
+sense.obj: /home/lucas/catkin_ws/src/jumpy/mcu_uart_jumpy/include/mcu_uart/device_conversion.hpp
 sense.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/map
 sense.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/__tree
 sense.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/__undef_macros
@@ -224,7 +224,7 @@ sense.obj: /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/lib
 /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/__undef_macros: 
 /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/__undef_macros: 
 /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/array: 
-/home/lucas/catkin_ws/src/jumpy/mcu_uart/include/mcu_uart/device_conversion.hpp: 
+/home/lucas/catkin_ws/src/jumpy/mcu_uart_jumpy/include/mcu_uart/device_conversion.hpp: 
 /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/map: 
 /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/__tree: 
 /home/lucas/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.4.LTS/include/libcxx/__undef_macros: 

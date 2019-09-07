@@ -13,24 +13,25 @@ int main(int argc, char **argv) {
     ros::NodeHandle n; // create handle to node process, register node with ROS master  
 
     // set up publishers
-    ros::Publisher pub_pres_tank = n.advertise<std_msgs::Float32MultiArray>("pressure_tank", 1);
-    ros::Publisher pub_pres_exo = n.advertise<std_msgs::Float32MultiArray>("pressure_exo", 1);
-    ros::Publisher pub_fsr = n.advertise<std_msgs::Float32MultiArray>("fsr", 1); 
-    ros::Publisher pub_pres_error = n.advertise<std_msgs::Float32MultiArray>("pressure_error", 1);
-    ros::Publisher pub_duty = n.advertise<std_msgs::Float32MultiArray>("duty", 1);
+    ros::Publisher pub_pres_tank = n.advertise<std_msgs::Float32MultiArray>("pres_tank", 1);
+    ros::Publisher pub_pres_act = n.advertise<std_msgs::Float32MultiArray>("pres_actuator", 1);
+    // ros::Publisher pub_fsr = n.advertise<std_msgs::Float32MultiArray>("fsr", 1); 
+    // ros::Publisher pub_pres_error = n.advertise<std_msgs::Float32MultiArray>("pressure_error", 1);
+    // ros::Publisher pub_duty = n.advertise<std_msgs::Float32MultiArray>("duty", 1);
     publisher_map pub_map; // map to indicate data indices that correspond to each publisher
     pub_map[&pub_pres_tank] = std::vector<int>({0});
-    pub_map[&pub_pres_exo] = std::vector<int>({1});
-    pub_map[&pub_fsr] = std::vector<int>({2});
-    pub_map[&pub_pres_error] = std::vector<int>({3});
-    pub_map[&pub_duty] = std::vector<int>({4});
+    pub_map[&pub_pres_act] = std::vector<int>({1,2,3,4});
+    // pub_map[&pub_fsr] = std::vector<int>({2});
+    // pub_map[&pub_pres_error] = std::vector<int>({3});
+    // pub_map[&pub_duty] = std::vector<int>({4});
 
     // set up serial port
     std::string device = "/dev/ttyACM0";
     Serial msp(device, B115200, pub_map); // set up MSP serial port
 
     // set up subscriber
-    ros::Subscriber sub_tx = n.subscribe("mcu_tx",100, &Serial::transmitData, &msp, ros::TransportHints().tcpNoDelay(true)); // subscriber to data to transmit to MCU
+    ros::Subscriber sub_tx = n.subscribe("mcu_tx",100, &Serial::transmitData, 
+        &msp, ros::TransportHints().tcpNoDelay(true)); // subscriber to data to transmit to MCU
 
     // loop and transmit/receive data
     while (ros::ok()) { // while ROS not shutdown
