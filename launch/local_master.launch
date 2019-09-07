@@ -1,0 +1,56 @@
+<launch>
+
+	<!-- default arguments -->
+	<arg name="bag_file_prefix" default="nextflex" />
+    <arg name="pres_ctrl_params" default="pres_ctrl_params_default.yaml" />
+
+	<!-- load control parameters -->
+    <rosparam command="load" file="$(find mcu_config)/config/$(arg pres_ctrl_params)" />
+
+	<!-- run UART communication -->
+	<node 
+        name="uart_comm"
+        pkg="mcu_uart" 
+        type="uart_comm" 
+        output="screen"
+    /> 
+
+	<!-- run MCU value configuration -->
+	<node
+        name="config_vals"
+        pkg="mcu_config" 
+        type="config_vals.py" 
+        output="screen"
+    />
+
+    <!-- run exo control
+    <node
+        name="pres_control"
+        pkg="exo_control"
+        type="pres_control.py"
+        output="screen" 
+	/>
+	-->
+
+    <!-- plot data simple -->
+	<node 
+		name="pres_plot"
+		pkg="rqt_plot"
+		type="rqt_plot"
+		args="/pressure_tank/data[0] /pressure_exo/data[0] /fsr/data[0] /pressure_error/data[0] /duty/data[0]" 
+	/>
+
+	<!-- plot data nice
+	<node pkg="exo_viz" type="pres_viz" name="pres_viz" />
+	-->
+
+	<!-- record bag file
+	<node
+        name="rosbag_record"
+        pkg="rosbag"
+        type="record" 
+		args="record -o /home/lucas/catkin_ws/bagfiles/$(arg bag_file_prefix) /mcu_rx" 
+    />
+	-->
+    
+</launch>
