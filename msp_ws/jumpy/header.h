@@ -10,10 +10,11 @@
 
 
 // function prototypes
-void Enc_Config(void);
+void configEnc(void);
 void configClocks(void);
-void configPins(void);
-void Analog_Config(void);
+void configValvePins(void);
+void configGpioPins(void);
+void configAnalog(void);
 void configTimers(void);
 void configUart(void);
 void configInterrupts(void);
@@ -22,7 +23,7 @@ void initEncoder(void);
 void sensorUpdate(void);
 void controlUpdate(void);
 void updateValues(void);
-void sendData(void);
+void sendData(int n_float_tx);
 extern "C" void EUSCIA0_IRQHandler(void);
 extern "C" void TA2_0_IRQHandler(void);
 void PORT3_IRQHandler(void);
@@ -37,6 +38,7 @@ void delay(int d);
 #define LPF_ORDER 20                 // order of FIR low-pass filter
 #define THETA_1_OFFSET -3.56 //2.9 //-3.56 // (deg) offset between zero position and index pulse TODO: determine
 #define THETA_2_OFFSET -29.18 //16.172 // (deg) offset between zero position and index pulse TODO: determine
+#define NUM_VALVES 4 // number of valves
 #define NUM_PRES_SENSOR 5  // number of pressure sensors; 5 max based on number of provided PWM signals
 #define NUM_LIGHT_SENSOR 8 // number of light sensors
 #define DEG_PER_COUNT 360.0/8192.0 // encoder degrees per count
@@ -63,14 +65,18 @@ extern volatile float theta2[2]; // (deg) current and previous distal joint angl
 extern volatile int sensorFlag;      // sensor update flag
 
 // control variables
-extern float ctrl_params[NUM_PRES_SENSOR][4];
-extern float pres_des[NUM_PRES_SENSOR];
-
+extern float ctrl_params[NUM_VALVES][4];
+extern float pres_des[NUM_VALVES];
 extern volatile int controlFlag; // control update flag
-extern volatile int newSetpointFlag; // new pressure setpoint flag
+struct valve {
+    uint_fast8_t port;
+    uint_fast16_t pin_inflate;
+    uint_fast16_t pin_vent;
+};
+extern struct valve valves[NUM_VALVES];
+
 
 // data reception & transmission variables
-extern int sendDataCount; // UART data transmission counter TODO: create static var inside sensor function
 extern volatile uint8_t textBuf[UART_BUFFER_SIZE]; // initialize text buffer
 extern volatile int updateValuesFlag;
 //DEBUG: global vars for UART RX/TX

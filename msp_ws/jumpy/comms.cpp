@@ -7,9 +7,9 @@
 
 
 // send data over UART
-void sendData(void) { //TODO: restructure function to take number of floats, etc.
+void sendData(int n_float_tx) { //TODO: restructure function to take number of floats, etc.
     // set up data structures
-    int n_float_tx = 15; // number of floats to transmit
+//    int n_float_tx = 15; // number of floats to transmit
     int n8_tx = n_float_tx*4; // number of data bytes to transmit
     uint8_t arr8_unstuff_tx[252]; //[n8_tx]; // array for unstuffed data
     uint8_t arr8_stuff_tx[256]; // array for stuffed data
@@ -62,7 +62,7 @@ void EUSCIA0_IRQHandler(void) {
 
 // update values based on received UART data
 void updateValues(void) { // TODO: change function name?
-    MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P2, GPIO_PIN1);
+    MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN0); // toggle red LED
 
     switch ((int)uart_rx[0] & 255) { // LSbyte indicates message type
         volatile float *start;
