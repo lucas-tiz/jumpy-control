@@ -17,6 +17,7 @@
 
 // microcontroller parameters
 #define ADC_RES10 1023.0
+#define ADC_RES12 4095.0
 #define ADC_RES14 16383.0
 
 

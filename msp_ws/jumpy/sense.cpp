@@ -4,7 +4,9 @@
 
 // convert encoder counts to angles, filter, and save
 void sensorUpdate(void) {
-    static Converter convert(ADC_RES14, 5.0, 3.3); // measurement converter
+//    MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN7); //DEBUG
+
+    static Converter convert(ADC_RES12, 5.0, 3.3); // measurement converter
 
     // shift angle histories
 //    theta1[1] = theta1[0];
@@ -17,8 +19,8 @@ void sensorUpdate(void) {
     // get ADC conversions
     MAP_ADC14_toggleConversionTrigger(); // initiate a single conversion (trigger)
     while(MAP_ADC14_isBusy()); // wait until ADC conversion complete
-    uint16_t adc_conv[14]; // initialize array for ADC results
-    for (int i = 0; i < 14; i++) {
+    uint16_t adc_conv[9]; // initialize array for ADC results
+    for (int i = 0; i < 9; i++) {
         adc_conv[i] = ADC14->MEM[i];
     }
 
@@ -62,6 +64,7 @@ void sensorUpdate(void) {
 //    std::copy(ctrl_params[1], ctrl_params[1]+4, uart_tx + 9);
 //    std::copy(pres_des, pres_des+5, uart_tx+13);
 
+//    MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P3, GPIO_PIN7); //DEBUG
 }
 
 

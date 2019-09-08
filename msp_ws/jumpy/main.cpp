@@ -7,13 +7,6 @@
 //
 //****************************************************************************
 
-/* DEBUG:
- * - test sensing frequency - figure out max freq
- * - test control frequency
- * - test comms frequency
- * - test 2x pin control for each valve
- */
-
 /* TODO:
  * - add joint potentiometer code (initialization needed?)
  * - append f to floats
@@ -61,7 +54,7 @@ void main(void) {
         }
 
         // turn on LED to indicate test start as soon as at least one pressure is set
-        if ((pres_des[0] <= 0) | (pres_des[1] <= 0) | (pres_des[2] <= 0) | (pres_des[3] <= 0)) {
+        if ((pres_des[0] <= 0) & (pres_des[1] <= 0) & (pres_des[2] <= 0) & (pres_des[3] <= 0)) {
             MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN2);
         }
         else {

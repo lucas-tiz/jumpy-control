@@ -87,22 +87,22 @@ const Timer_A_PWMConfig pwmTimerConfig5 =
     0
 };
 
-// sensor measurement timer configuration: 100 Hz
+// sensor measurement timer configuration: 500 Hz
 const Timer_A_UpModeConfig sensorTimerConfig = // configure timer A in up mode
 {
     TIMER_A_CLOCKSOURCE_SMCLK,          // tie timer A to SMCLK
     TIMER_A_CLOCKSOURCE_DIVIDER_1,      // increment counter every 4 clock cycles
-    15000,                              // period of timer A
+    3000,                              // period of timer A
     TIMER_A_TAIE_INTERRUPT_DISABLE,     // disable timer A rollover interrupt
     TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE, // enable capture compare interrupt
     TIMER_A_DO_CLEAR                    // clear counter upon initialization
 };
 
-// control update timer configuration: 500 Hz
+// control update timer configuration: 1000 Hz
 const Timer_A_UpModeConfig controlTimerConfig = // configure timer A in up mode
 {   TIMER_A_CLOCKSOURCE_SMCLK,          // tie timer A to SMCLK
     TIMER_A_CLOCKSOURCE_DIVIDER_1,      // increment counter every 4 clock cycles
-    3000,                              // period of timer A
+    1500,                              // period of timer A
     TIMER_A_TAIE_INTERRUPT_DISABLE,     // disable timer A rollover interrupt
     TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE, // enable capture compare interrupt
     TIMER_A_DO_CLEAR                    // clear counter upon initialization
@@ -178,6 +178,11 @@ void configGpioPins(void){
     // configure Instron digital start pin
 //    MAP_GPIO_setAsOutputPin(GPIO_PORT_P6, GPIO_PIN4); // P6.4
 //    MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P6, GPIO_PIN4);
+    // configure debug pins
+    MAP_GPIO_setAsOutputPin(GPIO_PORT_P3, GPIO_PIN7);
+    MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P3, GPIO_PIN7);
+    MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN5);
+    MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN5);
 }
 
 
@@ -192,16 +197,16 @@ void configAnalog(void) {
     MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN7, GPIO_TERTIARY_MODULE_FUNCTION); // A6  --> P4.7
     MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN6, GPIO_TERTIARY_MODULE_FUNCTION); // A7  --> P4.6
     MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN5, GPIO_TERTIARY_MODULE_FUNCTION); // A8  --> P4.5
-    MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN4, GPIO_TERTIARY_MODULE_FUNCTION); // A9  --> P4.4
-    MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN3, GPIO_TERTIARY_MODULE_FUNCTION); // A10 --> P4.3
-    MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN2, GPIO_TERTIARY_MODULE_FUNCTION); // A11 --> P4.2
-    MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN1, GPIO_TERTIARY_MODULE_FUNCTION); // A12 --> P4.1
-    MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN0, GPIO_TERTIARY_MODULE_FUNCTION); // A13 --> P4.0
+//    MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN4, GPIO_TERTIARY_MODULE_FUNCTION); // A9  --> P4.4
+//    MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN3, GPIO_TERTIARY_MODULE_FUNCTION); // A10 --> P4.3
+//    MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN2, GPIO_TERTIARY_MODULE_FUNCTION); // A11 --> P4.2
+//    MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN1, GPIO_TERTIARY_MODULE_FUNCTION); // A12 --> P4.1
+//    MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P4, GPIO_PIN0, GPIO_TERTIARY_MODULE_FUNCTION); // A13 --> P4.0
 
     MAP_ADC14_enableModule(); // enable ADC
-    MAP_ADC14_setResolution(ADC_14BIT); // set resolution of ADC module to 14 bit
-    MAP_ADC14_initModule(ADC_CLOCKSOURCE_SMCLK, ADC_PREDIVIDER_4, ADC_DIVIDER_4, ADC_NOROUTE); // use sub-master clock, external mapping // TODO: slower clock?
-    MAP_ADC14_configureMultiSequenceMode(ADC_MEM0, ADC_MEM13, 0); // configure multiple memory sample scheme, no repeat
+    MAP_ADC14_setResolution(ADC_12BIT); // set resolution of ADC module
+    MAP_ADC14_initModule(ADC_CLOCKSOURCE_SMCLK, ADC_PREDIVIDER_4, ADC_DIVIDER_1, ADC_NOROUTE); // use sub-master clock, external mapping // TODO: slower clock?
+    MAP_ADC14_configureMultiSequenceMode(ADC_MEM0, ADC_MEM8, 0); // configure multiple memory sample scheme, no repeat
 
     MAP_ADC14_configureConversionMemory(ADC_MEM0,  ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A0,  ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
     MAP_ADC14_configureConversionMemory(ADC_MEM1,  ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A1,  ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
@@ -212,11 +217,11 @@ void configAnalog(void) {
     MAP_ADC14_configureConversionMemory(ADC_MEM6,  ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A6,  ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
     MAP_ADC14_configureConversionMemory(ADC_MEM7,  ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A7,  ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
     MAP_ADC14_configureConversionMemory(ADC_MEM8,  ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A8,  ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
-    MAP_ADC14_configureConversionMemory(ADC_MEM9,  ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A9,  ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
-    MAP_ADC14_configureConversionMemory(ADC_MEM10, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A10, ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
-    MAP_ADC14_configureConversionMemory(ADC_MEM11, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A11, ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
-    MAP_ADC14_configureConversionMemory(ADC_MEM12, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A12, ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
-    MAP_ADC14_configureConversionMemory(ADC_MEM13, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A13, ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
+//    MAP_ADC14_configureConversionMemory(ADC_MEM9,  ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A9,  ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
+//    MAP_ADC14_configureConversionMemory(ADC_MEM10, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A10, ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
+//    MAP_ADC14_configureConversionMemory(ADC_MEM11, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A11, ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
+//    MAP_ADC14_configureConversionMemory(ADC_MEM12, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A12, ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
+//    MAP_ADC14_configureConversionMemory(ADC_MEM13, ADC_VREFPOS_AVCC_VREFNEG_VSS, ADC_INPUT_A13, ADC_NONDIFFERENTIAL_INPUTS); // configure individual memory location for ADC module
 
     MAP_ADC14_enableSampleTimer(ADC_AUTOMATIC_ITERATION); // configure sample timer to step through sequence
     MAP_ADC14_enableConversion();                         // enable conversion of ADC data

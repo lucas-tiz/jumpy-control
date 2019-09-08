@@ -4,6 +4,8 @@
 
 void controlUpdate(void) {
     // 3-way inflate/seal/vent valve control
+//    MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN5); //DEBUG
+
     int idx_valve; // index of actuator
     int idx_trans; // index of pressure transducer
     for (idx_valve = 0; idx_valve < NUM_VALVES; idx_valve++) { // loop over actuators
@@ -38,6 +40,7 @@ void controlUpdate(void) {
             MAP_GPIO_setOutputLowOnPin(valves[idx_valve].port, valves[idx_valve].pin_inflate);
         }
     }
+//    MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN5); //DEBUG
 }
 
 

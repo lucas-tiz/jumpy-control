@@ -14,6 +14,13 @@ void sendData(int n_float_tx) { //TODO: restructure function to take number of f
     uint8_t arr8_unstuff_tx[252]; //[n8_tx]; // array for unstuffed data
     uint8_t arr8_stuff_tx[256]; // array for stuffed data
 
+    //DEBUG:
+//    uart_tx[1] = pres_des[0];
+//    uart_tx[2] = pres_des[1];
+//    uart_tx[3] = pres_des[2];
+//    uart_tx[4] = pres_des[3];
+
+
     // separate, stuff, and send data
     SeparateArr(uart_tx, n_float_tx, arr8_unstuff_tx);  // separate floats into bytes
     StuffArr(arr8_unstuff_tx, n8_tx, arr8_stuff_tx); // create stuffed byte packet
@@ -60,16 +67,14 @@ void EUSCIA0_IRQHandler(void) {
 }
 
 
-// update values based on received UART data
 void updateValues(void) { // TODO: change function name?
-    MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P2, GPIO_PIN1); // toggle green LED
-
-    switch ((int)uart_rx[0] & 255) { // LSbyte indicates message type
-        volatile float *start;
+    // update values based on received UART data
+    switch ((int)uart_rx[0] & 255) { // LSbyte of first float indicates message type
+        volatile float *start; // pointer to start of data to copy
 
         case 0: { // update pressure setpoints
-            start = uart_rx+1;
-            std::copy(start, start+NUM_PRES_SENSOR, pres_des);
+            start = uart_rx+1; // start after first float
+            std::copy(start, start+NUM_VALVES, pres_des);
             break;
         }
         case 1: { // update pressure controller gains
