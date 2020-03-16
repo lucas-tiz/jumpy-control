@@ -15,7 +15,7 @@ float lpfCoeffs[LPF_ORDER+1] = {0.00007967,0.00097911,0.00371099,0.00985210,0.02
                                 0.03747917,0.05886406,0.08241999,0.10409454,0.11943855,
                                 0.12498883,0.11943855,0.10409454,0.08241999,0.05886406,
                                 0.03747917,0.02087523,0.00985210,0.00371099,0.00097911,0.00007967};
-const int presAdc[NUM_PRES_SENSOR] = {0,1,3,4,5}; // ADC channel corresponding to pressure
+const int presAdc[NUM_PRES_SENSOR] = {0,2,3,4,5}; // ADC channel corresponding to pressure
 volatile float pres[NUM_PRES_SENSOR][LPF_ORDER+1]; // (psi) current and previous pressures
 volatile float presFilt[NUM_PRES_SENSOR][2]; // (psi) current and one previous time-step of filtered pressures
 //const int lightAdc[NUM_LIGHT_SENSOR] = {6,7,8,9,10,11,12,13}; // ADC channel corresponding to light sensor
@@ -26,7 +26,7 @@ volatile int sensorFlag = 0;      // sensor update flag
 
 // control variables
 float ctrl_params[NUM_VALVES][4];
-float pres_des[NUM_VALVES] = {0};
+float pres_des[NUM_VALVES] = {-1,-1,-1,-1};
 volatile int controlFlag = 0; // control update flag
 struct valve valves[NUM_VALVES];
 

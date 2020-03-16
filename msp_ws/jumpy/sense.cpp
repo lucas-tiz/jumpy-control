@@ -33,8 +33,13 @@ void sensorUpdate(void) {
 //          pres[i][LPF_ORDER-j] = pres[i][LPF_ORDER-(j+1)]; // shift each value right (20 = 19, 19 = 18,...)
 //        }
         idx_adc = presAdc[i]; // index corresponding to ADC channel used for pressure measurement
-        pres[i][0] = convert.intToFloat(adc_conv[idx_adc], PRES_SSCDRRN100PGAB5); // convert and update pressure
+        if (i == 0) { // first (tank) transducer is old ASDX type
 
+            pres[i][0] = convert.intToFloat(adc_conv[idx_adc], PRES_ASDXAVX100PGAA5); // convert and update pressure
+        }
+        else {
+            pres[i][0] = convert.intToFloat(adc_conv[idx_adc], PRES_SSCDRRN100PGAB5); // convert and update pressure
+        }
         // calculate filtered pressures
 //        presFilt[i][1] = presFilt[i][0]; // shift filtered pressure histories
 //        presFilt[i][0] = 0; // reset current value to zero
@@ -43,8 +48,7 @@ void sensorUpdate(void) {
 //        }
     }
 
-    // update FSR
-//    float fsr_volt = convert.intToFloat(adc_conv[6], ANALOG); // convert
+
 
 
 //    // update light sensors (light sensors correspond to A5 - A12)
