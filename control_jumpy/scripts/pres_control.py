@@ -5,19 +5,14 @@ from std_msgs.msg import Float32MultiArray
 from std_msgs.msg import MultiArrayDimension
 import numpy as np
 
-# pressure sequence [time, pressure 1, pressure 2, pressure 3, pressure 4] (s, psi)
-# pres_seq = [[ 0.00, 00.0, 00.0, 00.0, 00.0], # (psi) pressure sequence [t, p1, p2, p3, p4]
-# 			[ 5.00, 00.0, 35.0, 35.0, 00.0],
-# 			[ 5.05, 35.0, 35.0, 35.0, 35.0],
-# 			[10.00, -1.0, -1.0, -1.0, -1.0]] # vent
+# pressure sequence [time, p1 KR, p2 HR, p3 HL, p4 KL] (s, psi)
 pres_seq = [[ 0.00, -1.0, -1.0, -1.0, -1.0], # seal
-			[10.00, 01.0, -1.0, -1.0, -1.0], # inflate
-			[11.01, -1.0, -1.0, -1.0, -1,0], # seal
-			[15.00, 00.0, -1.0, -1.0, -1.0], # vent 
-			[16.00, -1.0, -1.0, -1.0, -1,0]] # seal
+			[1.00, 35.0, 35.0, 35.0, 35.0], # inflate
+			[10.00, 00.0, 00.0, 00.0, 00.0]] # vent
+
 
 # global variables
-num_valves = 4
+num_valves = 4 
 
 
 class Controller:
@@ -37,7 +32,7 @@ class Controller:
 		rospy.sleep(1) # required in order to not miss initial published data
 
 
-	def runPresSequence(self):
+	def runPresSequence(self, pres_seq):
 		''' run pneumatic actuator pressure sequence '''
 		msg_test = Time()
 		t_start = rospy.get_time() # start time of pressure sequence
@@ -49,7 +44,7 @@ class Controller:
 			if t >= pres_seq[ind_pres_seq][0]: # if at next time in sequence
 				self.msg_tx.data[1:(num_valves+1)] = pres_seq[ind_pres_seq][1:(num_valves+1)] # add pressures to message
 				self.pub_tx.publish(self.msg_tx) # publish message
-				print('pressure setpoint updated: ', pres_seq[ind_pres_seq][1:(num_valves+1)], 'at time: ', t)
+				print '  pressure setpoint updated:', pres_seq[ind_pres_seq][1:(num_valves+1)], 'at time {0:.2f}'.format(t) 
 				ind_pres_seq = ind_pres_seq + 1 # increment pressure sequence index
 
 
@@ -57,9 +52,16 @@ if __name__ == '__main__':
 	rospy.init_node('pres_control', anonymous=True) # initialize ROS node
 	controller = Controller('mcu_tx') # create controller
 
-	try:
-		controller.runPresSequence() # run pressure sequence
-		print("finished")
+	def shutdown(): # set up venting on shutdown
+		print('shutdown: venting')
+		vent_seq = 	 [[0.00, 00.0, 00.0, 00.0, 00.0], # vent all valves
+			  		  [2.00, -1.0, -1.0, -1.0, -1.0]] # seal all valves
+		controller.runPresSequence(vent_seq)
+		rospy.sleep(2)
+		print('vented!')
+	rospy.on_shutdown(shutdown)
 
-	except KeyboardInterrupt:
-		print("shutting down")
+	print('running pressure sequence')
+	controller.runPresSequence(pres_seq) # run pressure sequence
+	print("finished pressure sequence\n")
+
