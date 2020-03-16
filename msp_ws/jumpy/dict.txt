@@ -1,6 +1,0 @@
-setpoint
-lucas
-watchdog
-tiziani
-setpoints
-transducer
