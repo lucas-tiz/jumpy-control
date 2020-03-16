@@ -6,38 +6,30 @@ void controlUpdate(void) {
     // 3-way inflate/seal/vent valve control
 //    MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN5); //DEBUG
 
+    static float pres_deadband[4] = {1,1,1,1};
+    static float pres_undershoot[4] = {0,0,0,0};
     int idx_valve; // index of actuator
     int idx_trans; // index of pressure transducer
     for (idx_valve = 0; idx_valve < NUM_VALVES; idx_valve++) { // loop over actuators
         idx_trans = idx_valve + 1;
 
-        // pressure on/off control
-        //TODO: set pres_deadband
-//        if (pres_des[idx_valve] == 0) { // vent
-//            MAP_GPIO_setOutputHighOnPin(valves[idx_valve].port, valves[idx_valve].pin_vent);
-//            MAP_GPIO_setOutputLowOnPin(valves[idx_valve].port, valves[idx_valve].pin_inflate);
-//        }
-//        else if (pres[idx_trans][0] >= pres_des[idx_valve]) { // seal
-//            MAP_GPIO_setOutputLowOnPin(valves[idx_valve].port, valves[idx_valve].pin_vent);
-//            MAP_GPIO_setOutputLowOnPin(valves[idx_valve].port, valves[idx_valve].pin_inflate);
-//        }
-//        else if (pres[idx_trans][0] < pres_des[idx_valve] - pres_deadband[idx_valve]) { // inflate
-//            MAP_GPIO_setOutputLowOnPin(valves[idx_valve].port, valves[idx_valve].pin_vent);
-//            MAP_GPIO_setOutputHighOnPin(valves[idx_valve].port, valves[idx_valve].pin_inflate);
-//        }
+//        pres[idx_trans][0] = 0; //DEBUG
 
-        // manual on/off control
-        if (pres_des[idx_valve] == 0) { // vent
+        if (pres_des[idx_valve] < 0) { // seal (manual)
+            MAP_GPIO_setOutputLowOnPin(valves[idx_valve].port, valves[idx_valve].pin_vent);
+            MAP_GPIO_setOutputLowOnPin(valves[idx_valve].port, valves[idx_valve].pin_inflate);
+        }
+        else if (pres_des[idx_valve] == 0) { // vent
             MAP_GPIO_setOutputHighOnPin(valves[idx_valve].port, valves[idx_valve].pin_vent);
             MAP_GPIO_setOutputLowOnPin(valves[idx_valve].port, valves[idx_valve].pin_inflate);
         }
-        else if (pres_des[idx_valve] > 0) { // inflate
-            MAP_GPIO_setOutputLowOnPin(valves[idx_valve].port, valves[idx_valve].pin_vent);
-            MAP_GPIO_setOutputHighOnPin(valves[idx_valve].port, valves[idx_valve].pin_inflate);
-        }
-        else { // (negative number) // seal
+        else if (pres[idx_trans][0] >= (pres_des[idx_valve]+pres_undershoot[idx_valve])) { // seal (feedback control)
             MAP_GPIO_setOutputLowOnPin(valves[idx_valve].port, valves[idx_valve].pin_vent);
             MAP_GPIO_setOutputLowOnPin(valves[idx_valve].port, valves[idx_valve].pin_inflate);
+        }
+        else if (pres[idx_trans][0] < (pres_des[idx_valve] - pres_deadband[idx_valve])) { // inflate
+            MAP_GPIO_setOutputLowOnPin(valves[idx_valve].port, valves[idx_valve].pin_vent);
+            MAP_GPIO_setOutputHighOnPin(valves[idx_valve].port, valves[idx_valve].pin_inflate);
         }
     }
 //    MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN5); //DEBUG
