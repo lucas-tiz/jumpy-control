@@ -1,7 +1,8 @@
 <launch>
 
-	<!-- default arguments -->
+	<!-- default arguments
 	<arg name="bag_file_prefix" default="jumpy" />
+    -->
 
 	<!-- run UART communication -->
 	<node 
@@ -18,10 +19,10 @@
 		pkg="rqt_plot"
 		type="rqt_plot"
 		args="/pres_tank/data[0] /pres_act1_kr/data[0] /pres_act2_hr/data[0] 
-            /pres_act3_hl/data[0] /pres_act4_kl/data[0]" 
+            /pres_act3_hl/data[0] /pres_act4_kl/data[0] /pres_des/data[0]" 
 	/>
 
-	<!-- record bag file -->
+	<!-- record bag file
 	<node
         name="rosbag_record"
         pkg="rosbag"
@@ -29,6 +30,7 @@
 		args="record -o '/home/lucas/Dropbox (GaTech)/Research/Hexapod/testing/bagfiles/$(arg bag_file_prefix)' 
             /pres_tank /pres_act1_kr /pres_act2_hr /pres_act3_hl /pres_act4_kl /test_start"
     />
+    -->
 
     <!-- run pressure control -->
     <!--
