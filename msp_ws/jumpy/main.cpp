@@ -38,7 +38,7 @@ void main(void) {
             sensorFlag = 0; // clear sensor flag
             sendDataCount++; // increment sensor flag
 
-            if (sendDataCount == 10) { // 50 Hz
+            if (sendDataCount == 5) { // 100 Hz
                 sendData(5); // send sensor data
                 sendDataCount = 0; // reset sensor flag
                 MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN0); // toggle red LED
