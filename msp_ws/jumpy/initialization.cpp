@@ -183,6 +183,11 @@ void configGpioPins(void){
     MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P3, GPIO_PIN7);
     MAP_GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_PIN5);
     MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN5);
+
+    // configure test start LED
+    MAP_GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_PIN3);
+    MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN3);
+    MAP_GPIO_setDriveStrengthHigh(GPIO_PORT_P2, GPIO_PIN3);
 }
 
 
