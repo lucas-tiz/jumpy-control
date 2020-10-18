@@ -83,7 +83,17 @@ void updateValues(void) { // TODO: change function name?
             std::copy(start, start+4, ctrl_params[ctrl_idx]);
             break;
         }
-        case 2: { // update length estimation coefficients TODO
+        case 2: { // toggle LED
+            switch ((int)uart_rx[1] & 255) {
+                case 0: {
+                    MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN3);
+                    break;
+                }
+                case 1: {
+                    MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN3);
+                    break;
+                }
+            }
             break;
         }
         case 3: { // update force estimation coefficients TODO
