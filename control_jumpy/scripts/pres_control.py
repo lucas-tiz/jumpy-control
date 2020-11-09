@@ -6,21 +6,49 @@ from std_msgs.msg import MultiArrayDimension
 import numpy as np
 
 # pressure sequence [time, p1 KR, p2 HR, p3 HL, p4 KL] (s, psi)
-p1 = 25.0
+p1 = 45.0
 p2 = 30.0
 p3 = 10.0
 # pres_seq = [[00.00, -1.0, -1.0, -1.0, -1.0], # seal
 # 			[01.00,   p1, -1.0, -1.0, -1.0], # inflate
 # 			[01.10, -1.0, -1.0, -1.0, -1.0]] # seal
-pres_seq = [[00.00, -1.0, -1.0, -1.0, -1.0], # seal
-			[05.00,   p1,   p1,   p1,   p1], # inflate 1
-			# [05.10, -1.0, -1.0, -1.0, -1.0], # seal
-			[05.05, -1.0, -1.0, -1.0, -1.0], # seal
-			[05.10,   p2,   p2,   p2,   p2], # inflate 2
-			[5.30,   0.0,  0.0,  0.0,  0.0], # vent at peak
-			[5.40,   0.0, 10.0, 10.0,  0.0], # inflate hips for landing, continue knee vent
-			[5.42,   0.0, -1.0, -1.0,  0.0], # seal	hips, continue knee vent		
-			[6.40,   0.0,  0.0,  0.0,  0.0]] # vent all
+# pres_seq = [[00.00, -1.0, -1.0, -1.0, -1.0], # seal
+# 			[05.00,   p1,   p1,   p1,   p1], # inflate 1
+# 			# [05.10, -1.0, -1.0, -1.0, -1.0], # seal
+# 			[05.05, -1.0, -1.0, -1.0, -1.0], # seal
+# 			[05.10,   p2,   p2,   p2,   p2], # inflate 2
+# 			[5.30,   0.0,  0.0,  0.0,  0.0], # vent at peak
+# 			[5.40,   0.0, 10.0, 10.0,  0.0], # inflate hips for landing, continue knee vent
+# 			[5.42,   0.0, -1.0, -1.0,  0.0], # seal	hips, continue knee vent		
+# 			[6.40,   0.0,  0.0,  0.0,  0.0]] # vent all
+
+# 1.2:
+# pres_seq = [[00.000, -1.0, -1.0, -1.0, -1.0], # seal
+# 			[05.000,   p1, -1.0, -1.0,   p1], # inflate knees
+# 			[05.019,   p1,   p1,   p1,   p1], # inflate hips
+# 			[05.062, -1.0,   p1,   p1, -1.0], # seal knees
+# 			[05.071, -1.0, -1.0, -1.0, -1.0], # seal hips
+# 			[05.7,   -1.0, -1.0, -1.0, -1.0]] # end
+# 1.3:
+# pres_seq = [[00.000, -1.0, -1.0, -1.0, -1.0], # seal
+# 			[05.000, -1.0,   p1,   p1, -1.0], # inflate hips
+# 			[05.017,   p1,   p1,   p1,   p1], # inflate knees
+# 			[05.083, -1.0, -1.0, -1.0, -1.0], # seal hips & knees
+# 			[05.7,   -1.0, -1.0, -1.0, -1.0]] # end
+# 1.4:
+# pres_seq = [[00.000, -1.0, -1.0, -1.0, -1.0], # seal
+# 			[05.000, -1.0,   p1,   p1, -1.0], # inflate hips
+# 			[05.010,   p1,   p1,   p1,   p1], # inflate knees
+# 			[05.107,   p1, -1.0, -1.0,   p1], # seal hips
+# 			[05.112, -1.0, -1.0, -1.0, -1.0], # seal knees
+# 			[05.7,   -1.0, -1.0, -1.0, -1.0]] # end
+# 1.4:
+pres_seq = [[00.000, -1.0, -1.0, -1.0, -1.0], # seal
+			[05.000, -1.0,   p1,   p1, -1.0], # inflate hips
+			[05.018,   p1,   p1,   p1,   p1], # inflate knees
+			[05.124,   p1, -1.0, -1.0,   p1], # seal hips
+			[05.134, -1.0, -1.0, -1.0, -1.0], # seal knees
+			[05.7,   -1.0, -1.0, -1.0, -1.0]] # end
 
 
 # global variables
