@@ -19,7 +19,7 @@
 		pkg="rqt_plot"
 		type="rqt_plot"
 		args="/pres_tank/data[0] /pres_act1_kr/data[0] /pres_act2_hr/data[0] 
-            /pres_act3_hl/data[0] /pres_act4_kl/data[0] /pres_des/data[0]" 
+            /pres_act3_hl/data[0] /pres_act4_kl/data[0] /pres_des/data[0] /pres_des/data[1]" 
 	/>
 
 	<!-- record bag file
