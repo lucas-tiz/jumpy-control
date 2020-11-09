@@ -34,8 +34,7 @@ void sensorUpdate(void) {
 //        }
         idx_adc = presAdc[i]; // index corresponding to ADC channel used for pressure measurement
         if (i == 0) { // first (tank) transducer is old ASDX type
-
-            pres[i][0] = convert.intToFloat(adc_conv[idx_adc], PRES_ASDXAVX100PGAA5); // convert and update pressure
+            pres[i][0] = convert.intToFloat(adc_conv[idx_adc]*2, PRES_ASDXAVX100PGAA5); // convert and update pressure
         }
         else {
             pres[i][0] = convert.intToFloat(adc_conv[idx_adc], PRES_SSCDRRN100PGAB5); // convert and update pressure
