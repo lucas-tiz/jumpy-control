@@ -7,19 +7,11 @@
 
 
 // send data over UART
-void sendData(int n_float_tx) { //TODO: restructure function to take number of floats, etc.
+void sendData(int n_float_tx) {
     // set up data structures
-//    int n_float_tx = 15; // number of floats to transmit
     int n8_tx = n_float_tx*4; // number of data bytes to transmit
     uint8_t arr8_unstuff_tx[252]; //[n8_tx]; // array for unstuffed data
     uint8_t arr8_stuff_tx[256]; // array for stuffed data
-
-    //DEBUG:
-//    uart_tx[1] = pres_des[0];
-//    uart_tx[2] = pres_des[1];
-//    uart_tx[3] = pres_des[2];
-//    uart_tx[4] = pres_des[3];
-
 
     // separate, stuff, and send data
     SeparateArr(uart_tx, n_float_tx, arr8_unstuff_tx);  // separate floats into bytes
@@ -34,7 +26,7 @@ void sendData(int n_float_tx) { //TODO: restructure function to take number of f
 
 // receive data over UART: eUSCI A module interrupt routine
 void EUSCIA0_IRQHandler(void) {
-    MAP_Interrupt_disableMaster(); // disable all interrupts
+    MAP_Interrupt_disableMaster(); // disable all interrupts TODO: necessary?
 
     static uint8_t arr8_stuff_rx[256]; // array for stuffed data
     static uint8_t arr8_unstuff_rx[252]; // array for unstuffed data
@@ -55,7 +47,7 @@ void EUSCIA0_IRQHandler(void) {
             int n_float_rx = (n8_rx-2)/4; // number of floats received
             std::copy(arr_float_cat_rx, arr_float_cat_rx + n_float_rx, uart_rx); // add received data into global array
             n8_rx = 0; // reset packet length
-            updateValuesFlag = 1; // set flag to update values
+            flag_receive = 1; // set flag to update values
         }
         else {
             arr8_stuff_rx[n8_rx] = buf_rx; // add byte to array
@@ -67,8 +59,8 @@ void EUSCIA0_IRQHandler(void) {
 }
 
 
-void updateValues(void) { // TODO: change function name?
-    // update values based on received UART data
+void receiveData(void) {
+    // do something with data received via UART
     switch ((int)uart_rx[0] & 255) { // LSbyte of first float indicates message type
         volatile float *start; // pointer to start of data to copy
 
@@ -83,7 +75,7 @@ void updateValues(void) { // TODO: change function name?
             std::copy(start, start+4, ctrl_params[ctrl_idx]);
             break;
         }
-        case 2: { // toggle LED
+        case 2: { // toggle external LED
             switch ((int)uart_rx[1] & 255) {
                 case 0: {
                     MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN3);
@@ -96,7 +88,16 @@ void updateValues(void) { // TODO: change function name?
             }
             break;
         }
-        case 3: { // update force estimation coefficients TODO
+        case 3: { // update valve time sequence array
+            const int idx_seq = ((int)uart_rx[0]) >> 8 & 255; // 2nd LSbyte indicates index pressure sequence
+            len_valve_seq = idx_seq; // update sequence length
+            start = uart_rx+1;
+            std::copy(start, start+5, valve_seq[idx_seq]); // copy time + 4 pressure values into sequence array
+            break;
+        }
+        case 4: { // start valve time sequence
+            t_valve_seq = 0; // reset valve sequence time
+            flag_valve_seq = 1; // raise flag
             break;
         }
     }
