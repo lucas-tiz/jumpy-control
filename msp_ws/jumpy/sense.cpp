@@ -2,6 +2,7 @@
 #include "device_conversion.hpp"
 #include <algorithm>
 
+
 // convert encoder counts to angles, filter, and save
 void sensorUpdate(void) {
 //    MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN7); //DEBUG
@@ -73,9 +74,7 @@ void sensorUpdate(void) {
 
 // sensor update timer interrupt routine
 extern "C" void TA1_0_IRQHandler(void) {
-    MAP_Interrupt_disableMaster(); // disable interrupts
-    sensorFlag = 1; // set flag to get sensor values
+    flag_sense = 1; // set flag to get sensor values
     MAP_Timer_A_clearCaptureCompareInterrupt(TIMER_A1_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0); // clear interrupt flag
-    MAP_Interrupt_enableMaster(); // enable interrupts
 }
 
