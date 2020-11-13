@@ -22,7 +22,7 @@ void startTimers(void);
 void initEncoder(void);
 void sensorUpdate(void);
 void controlUpdate(void);
-void updateValues(void);
+void receiveData(void);
 void sendData(int n_float_tx);
 extern "C" void EUSCIA0_IRQHandler(void);
 extern "C" void TA2_0_IRQHandler(void);
@@ -33,6 +33,7 @@ void delay(int d);
 // macros
 #define SENSE_FREQ 100.0 // sensor update frequency TODO: determine this
 #define SEND_DATA_COUNT 10 // number of sensor loops between each data send
+#define MAX_VALVE_SEQ 40 // maximum valve sequence length
 #define CONTROL_FREQ 100.0 // control update frequency TODO: determine this
 #define PWM_PERIOD 33333 // pulse-width modulation timer period
 #define LPF_ORDER 20                 // order of FIR low-pass filter
@@ -62,12 +63,16 @@ extern const int lightAdc[NUM_LIGHT_SENSOR]; // ADC channel corresponding to lig
 extern volatile float light[NUM_LIGHT_SENSOR]; // (V) current and previous light sensor values
 extern volatile float theta1[2]; // (deg) current and previous proximal joint angles
 extern volatile float theta2[2]; // (deg) current and previous distal joint angles
-extern volatile int sensorFlag;      // sensor update flag
+extern volatile int flag_sense;      // sensor update flag
 
 // control variables
+extern volatile float t_valve_seq; // valve sequence time
+extern float len_valve_seq; // valve sequence length
+extern float valve_seq[MAX_VALVE_SEQ][NUM_VALVES+1]; // valve timing sequence
+extern bool flag_valve_seq; // valve sequence start flag
 extern float ctrl_params[NUM_VALVES][4];
 extern float pres_des[NUM_VALVES];
-extern volatile int controlFlag; // control update flag
+extern volatile int flag_control; // control update flag
 struct valve {
     uint_fast8_t port;
     uint_fast16_t pin_inflate;
@@ -78,7 +83,7 @@ extern struct valve valves[NUM_VALVES];
 
 // data reception & transmission variables
 extern volatile uint8_t textBuf[UART_BUFFER_SIZE]; // initialize text buffer
-extern volatile int updateValuesFlag;
+extern volatile int flag_receive;
 //DEBUG: global vars for UART RX/TX
 extern volatile float uart_rx[63];
 extern float uart_tx[63];
