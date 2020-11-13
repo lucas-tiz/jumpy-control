@@ -31,35 +31,55 @@ void main(void) {
     startTimers();
     MAP_Interrupt_enableMaster(); // enable interrupts
 
-    int sendDataCount = 0;
+    int idx_seq = 0; // valve sequence index
+    int n_sense = 0;
     while(1) {
-        if (sensorFlag) {
-            sensorUpdate(); // get sensor data
-            sensorFlag = 0; // clear sensor flag
-            sendDataCount++; // increment sensor flag
 
-            if (sendDataCount == 5) { // 100 Hz
-                sendData(5); // send sensor data
-                sendDataCount = 0; // reset sensor flag
-                MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN0); // toggle red LED
+
+        //DEBUG
+        if (t_valve_seq >= 1.0) {
+            MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P3, GPIO_PIN7); // toggle debug pin
+            t_valve_seq = 0;
+        }
+
+
+        // run valve time sequence
+        if (flag_valve_seq) {
+            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN3); // turn on external LED
+            if (t_valve_seq >= valve_seq[idx_seq][0]) { // if at next time in sequence
+                std::copy(valve_seq[idx_seq], valve_seq[idx_seq]+4, pres_des); // update pressure setpoints
+                controlUpdate(); // update control
+                idx_seq++; // increment index
+            }
+            if (idx_seq = len_valve_seq) { // reset at end of sequence
+                MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN3); // turn off external LED
+                flag_valve_seq = 0; // reset flag
+                idx_seq = 0; // reset valve time sequence index
+                t_valve_seq = 0; // reset trajectory time
             }
         }
-        if (controlFlag) {
-            controlUpdate(); // update control
-            controlFlag = 0; // clear control flag
+
+
+        if (flag_sense) {
+            sensorUpdate(); // get sensor data
+            flag_sense = 0; // clear sensor flag
+            n_sense++; // increment sensor flag
+
+//            if (n_sense == 5) { // 100 Hz
+//                sendData(5); // send sensor data
+//                n_sense = 0; // reset sensor flag
+//                MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN0); // toggle red LED
+//            }
         }
-        if (updateValuesFlag) {
-            updateValues(); // update pressure setpoint values
-            updateValuesFlag = 0; // clear values update flag
+        if (flag_control) {
+            controlUpdate(); // update control
+            flag_control = 0; // clear control flag
+        }
+        if (flag_receive) {
+            receiveData(); // receive data
+            flag_receive = 0; // clear data receive flag
         }
 
-        // turn on LED to indicate test start as soon as at least one pressure is set
-        if ((pres_des[0] <= 0) & (pres_des[1] <= 0) & (pres_des[2] <= 0) & (pres_des[3] <= 0)) {
-            MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN2);
-        }
-        else {
-            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN0); // turn on red LED
-        }
 
         // manually vent all valves if button 1 pushed
         if (MAP_GPIO_getInputPinValue(GPIO_PORT_P1, GPIO_PIN1) == 0) {
@@ -75,19 +95,12 @@ void main(void) {
                 MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN1); // turn off green LED
             }
         }
-
-//        //DEBUG
-//        int idx_valve = 3;
-//        if (MAP_GPIO_getInputPinValue(GPIO_PORT_P1, GPIO_PIN1) == 0) { // inflate
-//            pres_des[idx_valve] = 10;
-//            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN2); // turn on blue LED
-//            MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN1); // turn off green LED
-//        }
-//        if (MAP_GPIO_getInputPinValue(GPIO_PORT_P1, GPIO_PIN4) == 0) { // vent
-//            pres_des[idx_valve] = 0;
-//            MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN2); // turn off blue LED
-//            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN1); // turn on green LED
-//        }
     }
 }
+
+
+extern "C" void SysTick_Handler(void) {
+    t_valve_seq = t_valve_seq + 0.0001;
+}
+
 
