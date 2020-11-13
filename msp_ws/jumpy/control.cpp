@@ -1,7 +1,6 @@
 #include "header.h"
 
 
-
 void controlUpdate(void) {
     // 3-way inflate/seal/vent valve control
 //    MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN5); //DEBUG
@@ -53,9 +52,7 @@ void controlUpdate(void) {
 
 // control update timer interrupt routine
 extern "C" void TA2_0_IRQHandler(void) {
-    MAP_Interrupt_disableMaster(); // disable interrupts
-    controlFlag = 1; // set flag to get update system control
+    flag_control = 1; // set flag to get update system control
     MAP_Timer_A_clearCaptureCompareInterrupt(TIMER_A2_BASE, TIMER_A_CAPTURECOMPARE_REGISTER_0); // clear interrupt flag
-    MAP_Interrupt_enableMaster(); // enable interrupts
 }
 
