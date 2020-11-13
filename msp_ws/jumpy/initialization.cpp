@@ -22,19 +22,23 @@ volatile float presFilt[NUM_PRES_SENSOR][2]; // (psi) current and one previous t
 //volatile float light[NUM_LIGHT_SENSOR]; // (V) current and previous light sensor values
 //volatile float theta1[2] = {0,0}; // (deg) current and previous proximal joint angles
 //volatile float theta2[2] = {0,0}; // (deg) current and previous distal joint angles
-volatile int sensorFlag = 0;      // sensor update flag
+volatile int flag_sense = 0;      // sensor update flag
 
 // control variables
+volatile float t_valve_seq = 0;
+float len_valve_seq = 0;
+float valve_seq[MAX_VALVE_SEQ][NUM_VALVES+1];
+bool flag_valve_seq = 0;
 float ctrl_params[NUM_VALVES][4];
 float pres_des[NUM_VALVES] = {-1,-1,-1,-1};
-volatile int controlFlag = 0; // control update flag
+volatile int flag_control = 0; // control update flag
 struct valve valves[NUM_VALVES];
 
 
 // data reception & transmission variables
 //volatile uint8_t uartTextBuffer[UART_BUFFER_SIZE]; // text buffer declaration
 volatile uint8_t textBuf[UART_BUFFER_SIZE] = {0}; // initialize text buffer
-volatile int updateValuesFlag = 0;
+volatile int flag_receive = 0;
 //DEBUG: global vars for UART RX/TX
 volatile float uart_rx[63] = {1,2,3,4};
 float uart_tx[63];
@@ -128,6 +132,8 @@ void configClocks(void) {
     MAP_FlashCtl_setWaitState(FLASH_BANK1, 1); // flash wait state required for 48 MHz frequency
     MAP_CS_setDCOFrequency(48E+6); // set DCO clock source frequency to 48 MHz
     MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_32);  // tie SMCLK to DCO, 32 divider
+
+//    MAP_CS_initClockSignal(CS_, CS_LFXTCLK_SELECT, CS_CLOCK_DIVIDER_)
 }
 
 
@@ -263,6 +269,11 @@ void configTimers(void) {
     // configure control loop timer: Timer A2
     MAP_Timer_A_configureUpMode(TIMER_A2_BASE, &controlTimerConfig); // configure timer
     MAP_Interrupt_enableInterrupt(INT_TA2_0);                        // enable timer interrupt on NVIC module
+
+    // set up SysTick timer
+    MAP_SysTick_enableModule();
+    MAP_SysTick_setPeriod(4.8E+3); // 10kHz
+    MAP_SysTick_enableInterrupt();
 }
 
 void configUart(void) {
