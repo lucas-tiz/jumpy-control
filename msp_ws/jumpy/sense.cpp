@@ -4,7 +4,7 @@
 
 
 // convert encoder counts to angles, filter, and save
-void sensorUpdate(void) {
+void sensorUpdate(int idx_sense) {
 //    MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN7); //DEBUG
 
     static Converter convert(ADC_RES12, 5.0, 3.3); // measurement converter
@@ -33,7 +33,7 @@ void sensorUpdate(void) {
 //        for (int j = 0; j < LPF_ORDER; j++) { // loop over pressure history
 //          pres[i][LPF_ORDER-j] = pres[i][LPF_ORDER-(j+1)]; // shift each value right (20 = 19, 19 = 18,...)
 //        }
-        idx_adc = presAdc[i]; // index corresponding to ADC channel used for pressure measurement
+        idx_adc = adc_pres[i]; // index corresponding to ADC channel used for pressure measurement
         if (i == 0) { // first (tank) transducer is old ASDX type
             pres[i][0] = convert.intToFloat(adc_conv[idx_adc]*2, PRES_ASDXAVX100PGAA5); // convert and update pressure
         }
@@ -49,13 +49,13 @@ void sensorUpdate(void) {
     }
 
 
-
-
-//    // update light sensors (light sensors correspond to A5 - A12)
-//    for (int i = 0; i < NUM_LIGHT_SENSOR; i++) { // loop over light sensors
-//        idx_adc = lightAdc[i]; // index corresponding to ADC channel used for light measurement
-//        light[i] = adc_conv[idx_adc]*(3.3/16383); // update light sensor value
-//    }
+    // select data to save
+    data_traj[idx_sense][0] = t_valve_seq;
+    data_traj[idx_sense][0] = pres[0][0];
+    data_traj[idx_sense][0] = pres[1][0];
+    data_traj[idx_sense][0] = pres[2][0];
+    data_traj[idx_sense][0] = pres[3][0];
+    data_traj[idx_sense][0] = pres[4][0];
 
     // select data to transmit (put into uart_tx array) TODO: put this somewhere else when no longer directly using 'adc_conv'
     uart_tx[0] = pres[0][0];
