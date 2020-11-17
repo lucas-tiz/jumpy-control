@@ -25,7 +25,7 @@ volatile bool flag_sense = 0;      // sensor update flag
 
 // control variables
 volatile float t_valve_seq = 0;
-float len_valve_seq = 0;
+int len_valve_seq = 0;
 float valve_seq[MAX_VALVE_SEQ][NUM_VALVES+1];
 bool flag_valve_seq = 0;
 float ctrl_params[NUM_VALVES][4];
@@ -137,31 +137,20 @@ const eUSCI_UART_Config uartConfig = // configuration struct
 
 
 void configClocks(void) {
-//    // set up clock
-//    MAP_FlashCtl_setWaitState(FLASH_BANK0, 1); // flash wait state required for 48 MHz frequency
-//    MAP_FlashCtl_setWaitState(FLASH_BANK1, 1); // flash wait state required for 48 MHz frequency
-//    MAP_CS_setDCOFrequency(48E+6); // set DCO clock source frequency to 48 MHz
-//    MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_32);  // tie SMCLK to DCO, 32 divider
+//    // set up clock (digitally controlled osc)
+//    MAP_FlashCtl_setWaitState(FLASH_BANK0, 2);
+//    MAP_FlashCtl_setWaitState(FLASH_BANK1, 2);
+//    MAP_PCM_setCoreVoltageLevel(PCM_VCORE1); // higher voltage level to support 48 MHz
+//    MAP_CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_48);
+//    MAP_CS_setDCOFrequency(48000000);
+//    MAP_CS_initClockSignal(CS_MCLK, CS_DCOCLK_SELECT, 1);
+//    MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_32);
 
-
-    // set clock
-    MAP_FlashCtl_setWaitState(FLASH_BANK0, 2);
-    MAP_FlashCtl_setWaitState(FLASH_BANK1, 2);
-    MAP_PCM_setCoreVoltageLevel(PCM_VCORE1); // higher voltage level to support 48 MHz
-//    MAP_PCM_setPowerState(PCM_AM_LDO_VCORE1); //  PCM_AM_DCDC_VCORE1
-    MAP_CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_48);
-    MAP_CS_setDCOFrequency(48000000);
-//    CS_tuneDCOFrequency TODO: try this (user guide)
-    MAP_CS_initClockSignal(CS_MCLK, CS_DCOCLK_SELECT, 1);
-    MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_32);
-
-
-    // set up clock
+    // set up clock (external crystal)
     MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_PJ,
         GPIO_PIN3 | GPIO_PIN2, GPIO_PRIMARY_MODULE_FUNCTION); // set pins for high-frequency crystal osc input/output
     MAP_CS_setExternalClockSourceFrequency(32000, 48E+6); // set external clock source freq value
     MAP_PCM_setCoreVoltageLevel(PCM_VCORE1); // higher voltage level to support 48 MHz
-//    MAP_PCM_setPowerState(PCM_AM_LDO_VCORE1); // PCM_AM_DCDC_VCORE1
     MAP_FlashCtl_setWaitState(FLASH_BANK0, 2);
     MAP_FlashCtl_setWaitState(FLASH_BANK1, 2);
     MAP_CS_startHFXT(false); // initialize HFXT crystal oscillator without bypass
@@ -303,7 +292,7 @@ void configTimers(void) {
 
     // configure control update timer: Timer A2
     MAP_Timer_A_configureUpMode(TIMER_A2_BASE, &controlTimerConfig); // configure timer
-    MAP_Interrupt_setPriority(INT_TA2_0,0);                          // set highest interrupt priority
+    MAP_Interrupt_setPriority(INT_TA2_0,1);                          // set highest interrupt priority
     MAP_Interrupt_enableInterrupt(INT_TA2_0);                        // enable timer interrupt on NVIC module
 
     // configure data transmission timer: Timer A3
@@ -339,5 +328,6 @@ void startTimers(void) {
     MAP_Timer_A_startCounter(TIMER_A0_BASE, TIMER_A_UP_MODE);  // start Timer A0
     MAP_Timer_A_startCounter(TIMER_A1_BASE, TIMER_A_UP_MODE);  // start Timer A1
     MAP_Timer_A_startCounter(TIMER_A2_BASE, TIMER_A_UP_MODE);  // start Timer A2
+    MAP_Timer_A_startCounter(TIMER_A3_BASE, TIMER_A_UP_MODE);  // start Timer A3
 }
 
