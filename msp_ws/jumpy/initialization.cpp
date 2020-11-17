@@ -15,14 +15,13 @@ float lpfCoeffs[LPF_ORDER+1] = {0.00007967,0.00097911,0.00371099,0.00985210,0.02
                                 0.03747917,0.05886406,0.08241999,0.10409454,0.11943855,
                                 0.12498883,0.11943855,0.10409454,0.08241999,0.05886406,
                                 0.03747917,0.02087523,0.00985210,0.00371099,0.00097911,0.00007967};
-const int presAdc[NUM_PRES_SENSOR] = {0,2,3,4,5}; // ADC channel corresponding to pressure
-volatile float pres[NUM_PRES_SENSOR][LPF_ORDER+1]; // (psi) current and previous pressures
-volatile float presFilt[NUM_PRES_SENSOR][2]; // (psi) current and one previous time-step of filtered pressures
-//const int lightAdc[NUM_LIGHT_SENSOR] = {6,7,8,9,10,11,12,13}; // ADC channel corresponding to light sensor
-//volatile float light[NUM_LIGHT_SENSOR]; // (V) current and previous light sensor values
+const int adc_pres[NUM_PRES_SENSOR] = {0,2,3,4,5}; // ADC channel corresponding to pressure
+float pres[NUM_PRES_SENSOR][LPF_ORDER+1]; // (psi) current and previous pressures
+float presFilt[NUM_PRES_SENSOR][2]; // (psi) current and one previous time-step of filtered pressures
 //volatile float theta1[2] = {0,0}; // (deg) current and previous proximal joint angles
 //volatile float theta2[2] = {0,0}; // (deg) current and previous distal joint angles
-volatile int flag_sense = 0;      // sensor update flag
+float data_traj[MAX_TRAJ_DATA][6];
+volatile bool flag_sense = 0;      // sensor update flag
 
 // control variables
 volatile float t_valve_seq = 0;
@@ -31,16 +30,17 @@ float valve_seq[MAX_VALVE_SEQ][NUM_VALVES+1];
 bool flag_valve_seq = 0;
 float ctrl_params[NUM_VALVES][4];
 float pres_des[NUM_VALVES] = {-1,-1,-1,-1};
-volatile int flag_control = 0; // control update flag
+volatile bool flag_control = 0; // control update flag
 struct valve valves[NUM_VALVES];
 
 
 // data reception & transmission variables
 //volatile uint8_t uartTextBuffer[UART_BUFFER_SIZE]; // text buffer declaration
 volatile uint8_t textBuf[UART_BUFFER_SIZE] = {0}; // initialize text buffer
-volatile int flag_receive = 0;
-//DEBUG: global vars for UART RX/TX
-volatile float uart_rx[63] = {1,2,3,4};
+volatile bool flag_receive = 0;
+volatile bool flag_transmit = 0;
+bool flag_dump = 0;
+volatile float uart_rx[63];
 float uart_tx[63];
 
 
@@ -102,11 +102,21 @@ const Timer_A_UpModeConfig sensorTimerConfig = // configure timer A in up mode
     TIMER_A_DO_CLEAR                    // clear counter upon initialization
 };
 
-// control update timer configuration: 1000 Hz
+// control update timer configuration: 500 Hz
 const Timer_A_UpModeConfig controlTimerConfig = // configure timer A in up mode
 {   TIMER_A_CLOCKSOURCE_SMCLK,          // tie timer A to SMCLK
     TIMER_A_CLOCKSOURCE_DIVIDER_1,      // increment counter every 4 clock cycles
-    1500,                              // period of timer A
+    3000,                               // period of timer A
+    TIMER_A_TAIE_INTERRUPT_DISABLE,     // disable timer A rollover interrupt
+    TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE, // enable capture compare interrupt
+    TIMER_A_DO_CLEAR                    // clear counter upon initialization
+};
+
+// data transmission timer configuration: 50 Hz
+const Timer_A_UpModeConfig transmitTimerConfig = // configure timer A in up mode
+{   TIMER_A_CLOCKSOURCE_SMCLK,          // tie timer A to SMCLK
+    TIMER_A_CLOCKSOURCE_DIVIDER_1,      // increment counter every 4 clock cycles
+    30000,                              // period of timer A
     TIMER_A_TAIE_INTERRUPT_DISABLE,     // disable timer A rollover interrupt
     TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE, // enable capture compare interrupt
     TIMER_A_DO_CLEAR                    // clear counter upon initialization
@@ -127,13 +137,36 @@ const eUSCI_UART_Config uartConfig = // configuration struct
 
 
 void configClocks(void) {
-    // set up clocks
-    MAP_FlashCtl_setWaitState(FLASH_BANK0, 1); // flash wait state required for 48 MHz frequency
-    MAP_FlashCtl_setWaitState(FLASH_BANK1, 1); // flash wait state required for 48 MHz frequency
-    MAP_CS_setDCOFrequency(48E+6); // set DCO clock source frequency to 48 MHz
-    MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_32);  // tie SMCLK to DCO, 32 divider
+//    // set up clock
+//    MAP_FlashCtl_setWaitState(FLASH_BANK0, 1); // flash wait state required for 48 MHz frequency
+//    MAP_FlashCtl_setWaitState(FLASH_BANK1, 1); // flash wait state required for 48 MHz frequency
+//    MAP_CS_setDCOFrequency(48E+6); // set DCO clock source frequency to 48 MHz
+//    MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_32);  // tie SMCLK to DCO, 32 divider
 
-//    MAP_CS_initClockSignal(CS_, CS_LFXTCLK_SELECT, CS_CLOCK_DIVIDER_)
+
+    // set clock
+    MAP_FlashCtl_setWaitState(FLASH_BANK0, 2);
+    MAP_FlashCtl_setWaitState(FLASH_BANK1, 2);
+    MAP_PCM_setCoreVoltageLevel(PCM_VCORE1); // higher voltage level to support 48 MHz
+//    MAP_PCM_setPowerState(PCM_AM_LDO_VCORE1); //  PCM_AM_DCDC_VCORE1
+    MAP_CS_setDCOCenteredFrequency(CS_DCO_FREQUENCY_48);
+    MAP_CS_setDCOFrequency(48000000);
+//    CS_tuneDCOFrequency TODO: try this (user guide)
+    MAP_CS_initClockSignal(CS_MCLK, CS_DCOCLK_SELECT, 1);
+    MAP_CS_initClockSignal(CS_SMCLK, CS_DCOCLK_SELECT, CS_CLOCK_DIVIDER_32);
+
+
+    // set up clock
+    MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_PJ,
+        GPIO_PIN3 | GPIO_PIN2, GPIO_PRIMARY_MODULE_FUNCTION); // set pins for high-frequency crystal osc input/output
+    MAP_CS_setExternalClockSourceFrequency(32000, 48E+6); // set external clock source freq value
+    MAP_PCM_setCoreVoltageLevel(PCM_VCORE1); // higher voltage level to support 48 MHz
+//    MAP_PCM_setPowerState(PCM_AM_LDO_VCORE1); // PCM_AM_DCDC_VCORE1
+    MAP_FlashCtl_setWaitState(FLASH_BANK0, 2);
+    MAP_FlashCtl_setWaitState(FLASH_BANK1, 2);
+    MAP_CS_startHFXT(false); // initialize HFXT crystal oscillator without bypass
+    MAP_CS_initClockSignal(CS_MCLK, CS_HFXTCLK_SELECT, CS_CLOCK_DIVIDER_1);
+    MAP_CS_initClockSignal(CS_SMCLK, CS_HFXTCLK_SELECT, CS_CLOCK_DIVIDER_32);
 }
 
 
@@ -248,7 +281,7 @@ void Config_Enc(void) {
     MAP_GPIO_setAsInputPinWithPullDownResistor(GPIO_PORT_P3, GPIO_PIN6); // encoder 2 channel B --> P3.6
     MAP_GPIO_setAsInputPinWithPullDownResistor(GPIO_PORT_P3, GPIO_PIN7); // encoder 2 channel X --> P3.7
     MAP_GPIO_clearInterruptFlag(GPIO_PORT_P3, GPIO_PIN0 | GPIO_PIN2 | GPIO_PIN3 | GPIO_PIN5 | GPIO_PIN6 | GPIO_PIN7); // clear interrupt flags
-    MAP_Interrupt_setPriority(INT_PORT3,1); // set second highest interrupt priority
+//    MAP_Interrupt_setPriority(INT_PORT3,1); // set priority
 }
 
 
@@ -265,10 +298,18 @@ void configTimers(void) {
 
     // configure sensor measurement timer: Timer A1
     MAP_Timer_A_configureUpMode(TIMER_A1_BASE, &sensorTimerConfig); // configure timer
+    MAP_Interrupt_setPriority(INT_TA1_0,1);                         // set second highest interrupt priority
     MAP_Interrupt_enableInterrupt(INT_TA1_0);                       // enable timer interrupt on NVIC module
-    // configure control loop timer: Timer A2
+
+    // configure control update timer: Timer A2
     MAP_Timer_A_configureUpMode(TIMER_A2_BASE, &controlTimerConfig); // configure timer
+    MAP_Interrupt_setPriority(INT_TA2_0,0);                          // set highest interrupt priority
     MAP_Interrupt_enableInterrupt(INT_TA2_0);                        // enable timer interrupt on NVIC module
+
+    // configure data transmission timer: Timer A3
+    MAP_Timer_A_configureUpMode(TIMER_A3_BASE, &transmitTimerConfig); // configure timer
+    MAP_Interrupt_setPriority(INT_TA3_0,4);                          // set lowest interrupt priority
+    MAP_Interrupt_enableInterrupt(INT_TA3_0);                        // enable timer interrupt on NVIC module
 
     // set up SysTick timer
     MAP_SysTick_enableModule();
@@ -278,7 +319,7 @@ void configTimers(void) {
 
 void configUart(void) {
     // configure UART
-    MAP_Interrupt_setPriority(INT_EUSCIA0, 0); // set highest interrupt priority
+    MAP_Interrupt_setPriority(INT_EUSCIA0, 3); // set lower priority
     MAP_UART_initModule(EUSCI_A0_BASE, &uartConfig); // configure UART module instance A0
     MAP_UART_enableModule(EUSCI_A0_BASE); // enable UART module instance A0
     MAP_UART_clearInterruptFlag(EUSCI_A0_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT); // clear receive interrupt flag
