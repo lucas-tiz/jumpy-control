@@ -14,12 +14,7 @@
 
 
 /* DEBUG
- * check timing with updated DCO config
- * check timing with crystal
- * check sense freq
- * check control freq
- * check transmit freq
- * check valve sequence - have to implement in ROS first
+ * check valve sequence upload via UART - have to implement in ROS first
  * check trajectory dump
  * how to separate dump from transmit????
  */
@@ -45,26 +40,36 @@ void main(void) {
     int idx_seq = 0; // valve sequence index
     int idx_sense = 0; // sensor read index
     int n_sense = 0; // number of sensor reads
+
+
+    valve_seq[0][0] = 0.0;
+    valve_seq[1][0] = 1.0;
+    flag_valve_seq = 1;
+    len_valve_seq = 2;
+    t_valve_seq = 0;
+
     while(1) {
 
 
         //DEBUG
-        if (t_valve_seq >= 1.0) {
-            MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P3, GPIO_PIN7); // toggle debug pin
-            t_valve_seq = 0;
-        }
+//        if (t_valve_seq >= 1.0) {
+//            MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P3, GPIO_PIN7); // toggle debug pin
+//            t_valve_seq = 0;
+//        }
 
 
         // run valve time sequence
         if (flag_valve_seq) {
-            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN3); // turn on external LED
+            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN2); // turn on external LED TODO
+            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN5); // toggle debug pin
             if (t_valve_seq >= valve_seq[idx_seq][0]) { // if at next time in sequence
                 std::copy(valve_seq[idx_seq], valve_seq[idx_seq]+4, pres_des); // update pressure setpoints
                 controlUpdate(); // update control
                 idx_seq++; // increment index
             }
-            if (idx_seq = len_valve_seq) { // reset at end of sequence
-                MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN3); // turn off external LED
+            if (idx_seq == len_valve_seq) { // reset at end of sequence
+                MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN2); // turn off external LED TODO
+                MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN5); // toggle debug pin
                 flag_valve_seq = 0; // reset flag
                 n_sense = idx_sense; // save number of sensor reads
                 idx_sense = 0; // reset sensor read index
@@ -85,19 +90,23 @@ void main(void) {
 
         // sense, control, receive, transmit
         if (flag_sense) { // read sensors
+//            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN5); // toggle debug pin
             sensorUpdate(idx_sense);
+//            MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN5); // toggle debug pin
             flag_sense = 0; // clear flag
             idx_sense = idx_sense + flag_valve_seq; // increment sensor read index if running valve time seq
         }
         if (flag_control) { // update control
+            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN7);
             controlUpdate();
+            MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P3, GPIO_PIN7); // toggle debug pin
             flag_control = 0; // clear flag
         }
         if (flag_receive) { // process received data
             receiveData();
             flag_receive = 0; // clear flag
         }
-        if (flag_transmit & !flag_valve_seq & !flag_dump) { // transmit data if not running traj
+        if (flag_transmit && !flag_valve_seq && !flag_dump) { // transmit data if not running traj
             sendData(uart_tx, 5);
             flag_transmit = 0; // clear flag
             MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN0); // toggle red LED
