@@ -70,7 +70,7 @@ extern float data_traj[MAX_TRAJ_DATA][6];
 
 // control variables
 extern volatile float t_valve_seq; // valve sequence time
-extern float len_valve_seq; // valve sequence length
+extern int len_valve_seq; // valve sequence length
 extern float valve_seq[MAX_VALVE_SEQ][NUM_VALVES+1]; // valve timing sequence
 extern bool flag_valve_seq; // valve sequence start flag
 extern float ctrl_params[NUM_VALVES][4];
