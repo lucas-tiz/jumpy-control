@@ -1,0 +1,6 @@
+roscore
+roslaunch local_master.launch
+rosrun mcu_uart_jumpy uart_process.py (run in data export folder)
+rosrun control_jumpy pres_control.py _file_prefix:="test"
+
+
