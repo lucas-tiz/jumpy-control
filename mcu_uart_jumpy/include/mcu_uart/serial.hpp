@@ -167,7 +167,7 @@ void Serial::receiveData(void) {
         
         msg_msp.packet_data.clear();
         msg_msp.packet_data.insert(msg_msp.packet_data.begin(), arr_float_rx, arr_float_rx + msg_msp.packet_size);
-        pub_map.begin()->first->publish(msg_msp); // publish msessage
+        pub_map.begin()->first->publish(msg_msp); // publish message
 
         // publisher_map::iterator iter;
         // for (iter = pub_map.begin(); iter != pub_map.end(); iter++) { // loop over publishers
