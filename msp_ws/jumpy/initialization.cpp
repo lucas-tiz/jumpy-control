@@ -11,26 +11,14 @@ volatile int debugVar[20];
 //volatile uint8_t prevEncState[2] = {0,0}; // previous states of both encoders (encoder 1, encoder 2) TODO: create static var inside encoder func
 
 // sensor variables
-float lpfCoeffs[LPF_ORDER+1] = {0.00007967,0.00097911,0.00371099,0.00985210,0.02087523, // FIR low-pass filter coefficients TODO: adjust
-                                0.03747917,0.05886406,0.08241999,0.10409454,0.11943855,
-                                0.12498883,0.11943855,0.10409454,0.08241999,0.05886406,
-                                0.03747917,0.02087523,0.00985210,0.00371099,0.00097911,0.00007967};
-const int adc_pres[NUM_PRES_SENSOR] = {0,2,3,4,5}; // ADC channel corresponding to pressure
-float pres[NUM_PRES_SENSOR][LPF_ORDER+1]; // (psi) current and previous pressures
-float presFilt[NUM_PRES_SENSOR][2]; // (psi) current and one previous time-step of filtered pressures
+
+
 //volatile float theta1[2] = {0,0}; // (deg) current and previous proximal joint angles
 //volatile float theta2[2] = {0,0}; // (deg) current and previous distal joint angles
-float data_traj[MAX_TRAJ_DATA][6];
-volatile bool flag_sense = 0;      // sensor update flag
 
 // control variables
-volatile float t_valve_seq = 0;
-int len_valve_seq = 0;
-float valve_seq[MAX_VALVE_SEQ][NUM_VALVES+1];
-bool flag_valve_seq = 0;
 float ctrl_params[NUM_VALVES][4];
 float pres_des[NUM_VALVES] = {-1,-1,-1,-1};
-volatile bool flag_control = 0; // control update flag
 struct valve valves[NUM_VALVES];
 
 
@@ -38,10 +26,8 @@ struct valve valves[NUM_VALVES];
 //volatile uint8_t uartTextBuffer[UART_BUFFER_SIZE]; // text buffer declaration
 volatile uint8_t textBuf[UART_BUFFER_SIZE] = {0}; // initialize text buffer
 volatile bool flag_receive = 0;
-volatile bool flag_transmit = 0;
-bool flag_dump = 0;
 volatile float uart_rx[63];
-float uart_tx[63];
+
 
 
 // PWM timer configurations: 22.2 ms period (45 Hz) TODO: check that this is the best frequency
