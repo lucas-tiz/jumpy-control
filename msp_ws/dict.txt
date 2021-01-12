@@ -13,3 +13,5 @@ undershoot
 deadband
 transducers
 lbf
+traj
+seq
