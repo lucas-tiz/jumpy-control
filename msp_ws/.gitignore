@@ -1,11 +1,5 @@
-**/.jxbrowser-data/
-**/.metadata 
-.ccsproject
-.cproject
-.DS_Store
-**/.launches/
-.project
-**/.settings
+.*
+!.gitignore
 **Debug/
 **/targetConfigs
 **/RemoteSystemsTempFiles/
