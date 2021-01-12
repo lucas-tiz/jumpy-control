@@ -1,6 +1,7 @@
 // Set up serial communication with MSP (publishers & subscriber)
 
 #include "mcu_uart/serial.hpp" // serial communication class
+#include "mcu_uart_jumpy/Msp.h" // MSP message type
 #include <ros/ros.h> // common ROS pieces
 #include <ros/console.h> // ros logging (info stream)
 #include <std_msgs/Float32MultiArray.h> // multi-byte array message
@@ -13,24 +14,25 @@ int main(int argc, char **argv) {
     ros::NodeHandle n; // create handle to node process, register node with ROS master  
 
     // set up publishers
-    ros::Publisher pub_pres_tank = n.advertise<std_msgs::Float32MultiArray>("pres_tank", 1);
-    ros::Publisher pub_pres_act1_kr = n.advertise<std_msgs::Float32MultiArray>("pres_act1_kr", 1);
-    ros::Publisher pub_pres_act2_hr = n.advertise<std_msgs::Float32MultiArray>("pres_act2_hr", 1);
-    ros::Publisher pub_pres_act3_hl = n.advertise<std_msgs::Float32MultiArray>("pres_act3_hl", 1);
-    ros::Publisher pub_pres_act4_kr = n.advertise<std_msgs::Float32MultiArray>("pres_act4_kl", 1);
-    // ros::Publisher pub_fsr = n.advertise<std_msgs::Float32MultiArray>("fsr", 1); 
-    // ros::Publisher pub_pres_error = n.advertise<std_msgs::Float32MultiArray>("pressure_error", 1);
-    // ros::Publisher pub_duty = n.advertise<std_msgs::Float32MultiArray>("duty", 1);
+    ros::Publisher pub_rx = n.advertise<mcu_uart_jumpy::Msp>("mcu_rx", 1);
+    // ros::Publisher pub_pres_tank = n.advertise<std_msgs::Float32MultiArray>("pres_tank", 1);
+    // ros::Publisher pub_pres_act1_kr = n.advertise<std_msgs::Float32MultiArray>("pres_act1_kr", 1);
+    // ros::Publisher pub_pres_act2_hr = n.advertise<std_msgs::Float32MultiArray>("pres_act2_hr", 1);
+    // ros::Publisher pub_pres_act3_hl = n.advertise<std_msgs::Float32MultiArray>("pres_act3_hl", 1);
+    // ros::Publisher pub_pres_act4_kr = n.advertise<std_msgs::Float32MultiArray>("pres_act4_kl", 1);
+    // // ros::Publisher pub_fsr = n.advertise<std_msgs::Float32MultiArray>("fsr", 1); 
+    // // ros::Publisher pub_pres_error = n.advertise<std_msgs::Float32MultiArray>("pressure_error", 1);
+    // // ros::Publisher pub_duty = n.advertise<std_msgs::Float32MultiArray>("duty", 1);
     publisher_map pub_map; // map to indicate data indices that correspond to each publisher
-    pub_map[&pub_pres_tank] = std::vector<int>({0});
-    pub_map[&pub_pres_act1_kr] = std::vector<int>({1});
-    pub_map[&pub_pres_act2_hr] = std::vector<int>({2});
-    pub_map[&pub_pres_act3_hl] = std::vector<int>({3});
-    pub_map[&pub_pres_act4_kr] = std::vector<int>({4});
-
-    // pub_map[&pub_fsr] = std::vector<int>({2});
-    // pub_map[&pub_pres_error] = std::vector<int>({3});
-    // pub_map[&pub_duty] = std::vector<int>({4});
+    pub_map[&pub_rx] = std::vector<int>({0});
+    // pub_map[&pub_pres_tank] = std::vector<int>({0});
+    // pub_map[&pub_pres_act1_kr] = std::vector<int>({1});
+    // pub_map[&pub_pres_act2_hr] = std::vector<int>({2});
+    // pub_map[&pub_pres_act3_hl] = std::vector<int>({3});
+    // pub_map[&pub_pres_act4_kr] = std::vector<int>({4});
+    // // pub_map[&pub_fsr] = std::vector<int>({2});
+    // // pub_map[&pub_pres_error] = std::vector<int>({3});
+    // // pub_map[&pub_duty] = std::vector<int>({4});
 
     // set up serial port
     std::string device = "/dev/ttyACM0";

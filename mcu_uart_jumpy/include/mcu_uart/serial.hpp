@@ -26,6 +26,7 @@ Notes
 
 #include "mcu_uart/byte_stuff.hpp" // byte stuffing functions
 #include "mcu_uart/util_lt.hpp" // my utilities
+#include "mcu_uart_jumpy/Msp.h" // MSP message type
 
 #include <ros/ros.h>                  // common ROS pieces
 #include <ros/console.h> // ros logging (info stream)
@@ -126,22 +127,33 @@ void Serial::receiveData(void) {
     /* receive data from MCU */
     static uint8_t buf_rx[1]; // create buffer for UART byte  
     static ssize_t n8_rx_read; // number of bytes from each read
-    static int n8_rx = 0; // number of bytes received in packet 
+    static int n8_rx = -1; // number of data bytes received in packet (exclude packet type byte)
+    static uint8_t packet_type; // packet type byte label 
     static uint8_t arr8_stuff_rx[256]; // array for stuffed data received, reserve space for 256 max bytes in packet
     static uint8_t arr8_unstuff_rx[252]; // array for unstuffed data received, reserve space for 254 max data bytes in packet
     static float arr_float_rx[63]; // array for concatenated data received, reserve space for 63 max floats
-    static std_msgs::Float32MultiArray msg; // create mutibyte message for publishing data
-    static bool initialized;
-    if (!initialized) {
-        initialized = true;
-        msg.layout.dim.push_back(std_msgs::MultiArrayDimension()); // add dimension message
-    }
+
+    static mcu_uart_jumpy::Msp msg_msp; 
+
+    // static std_msgs::Float32MultiArray msg; // create mutibyte message for publishing data
+    // static bool initialized;
+    // if (!initialized) {
+    //     initialized = true;
+    //     msg.layout.dim.push_back(std_msgs::MultiArrayDimension()); // add dimension message
+    // }
 
     n8_rx_read = read(fd_mcu, buf_rx, 1); // read byte if available
     if (n8_rx_read == 1) { // if byte was read
-      if (buf_rx[0] == 0) { // if at end of packet
+
+      if (n8_rx == -1) { // if first byte of packet
+        packet_type = buf_rx[0]; // save packet type
+        n8_rx++; // increment number of bytes received
+      }
+
+      else if (buf_rx[0] == 0) { // if at end of packet
         arr8_stuff_rx[n8_rx] = buf_rx[0]; // add byte to data array
         n8_rx++; // increment number of bytes in packet
+        // don't increment n8_rx: packet_type byte is excluded
         UnstuffArr(arr8_stuff_rx, n8_rx, arr8_unstuff_rx); // unstuff data in packet
         ConcatArr(arr8_unstuff_rx, n8_rx-2, arr_float_rx); // concatenate bytes into floats
           //DEBUG:
@@ -150,23 +162,30 @@ void Serial::receiveData(void) {
           print_arr_float(arr_float_rx, (n8_rx-2)/4, "mcu_rx");
           // ROS_INFO_STREAM("\n"); 
 
-        publisher_map::iterator iter;
-        for (iter = pub_map.begin(); iter != pub_map.end(); iter++) { // loop over publishers
-            msg.data.clear(); // clear message data vector
-            msg.layout.dim[0].size = 0; // clear message size
+        msg_msp.packet_type = packet_type; // update packet type in message
+        msg_msp.packet_size = n8_rx/4; // update packet size in message
+        
+        msg_msp.packet_data.clear();
+        msg_msp.packet_data.insert(msg_msp.packet_data.begin(), arr_float_rx, arr_float_rx + msg_msp.packet_size);
+        pub_map.begin()->first->publish(msg_msp); // publish msessage
 
-            for (std::vector<int>::size_type i = 0; i != iter->second.size(); i++) { // loop over indices for publisher
-                msg.data.push_back(arr_float_rx[iter->second[i]]); // add data corresponding to index
-                msg.layout.dim[0].size++; // increment message size
-            }
-            iter->first->publish(msg); // publish message
-        }
+        // publisher_map::iterator iter;
+        // for (iter = pub_map.begin(); iter != pub_map.end(); iter++) { // loop over publishers
+        //     msg.data.clear(); // clear message data vector
+        //     msg.layout.dim[0].size = 0; // clear message size
 
-        n8_rx = 0; // reset packet length
+        //     for (std::vector<int>::size_type i = 0; i != iter->second.size(); i++) { // loop over indices for publisher
+        //         msg.data.push_back(arr_float_rx[iter->second[i]]); // add data corresponding to index
+        //         msg.layout.dim[0].size++; // increment message size
+        //     }
+        //     iter->first->publish(msg); // publish message
+        // }
+        n8_rx = -1; // reset bytes received
       }
-      else {
+
+      else { // if middle byte of packet
         arr8_stuff_rx[n8_rx] = buf_rx[0]; // add byte to data array
-        n8_rx++; // increment number of bytes in packet
+        n8_rx++; // increment number of bytes received
       }
     }
 }
