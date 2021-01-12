@@ -1,0 +1,11 @@
+**/.jxbrowser-data/
+**/.metadata 
+.ccsproject
+.cproject
+.DS_Store
+**/.launches/
+.project
+**/.settings
+**Debug/
+**/targetConfigs
+**/RemoteSystemsTempFiles/
