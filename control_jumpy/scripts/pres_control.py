@@ -8,21 +8,25 @@ import numpy as np
 
 
 # pressure sequence [time, p1 KR, p2 HR, p3 HL, p4 KL] (s, psi)
-p1 = 45.0
-p2 = 30.0
-p3 = 10.0
-# pres_seq = [[00.00, -1.0, -1.0, -1.0, -1.0], # seal
-# 			[01.00,   p1, -1.0, -1.0, -1.0], # inflate
-# 			[01.10, -1.0, -1.0, -1.0, -1.0]] # seal
-# pres_seq = [[00.00, -1.0, -1.0, -1.0, -1.0], # seal
-# 			[05.00,   p1,   p1,   p1,   p1], # inflate 1
-# 			# [05.10, -1.0, -1.0, -1.0, -1.0], # seal
-# 			[05.05, -1.0, -1.0, -1.0, -1.0], # seal
-# 			[05.10,   p2,   p2,   p2,   p2], # inflate 2
-# 			[5.30,   0.0,  0.0,  0.0,  0.0], # vent at peak
-# 			[5.40,   0.0, 10.0, 10.0,  0.0], # inflate hips for landing, continue knee vent
-# 			[5.42,   0.0, -1.0, -1.0,  0.0], # seal	hips, continue knee vent		
-# 			[6.40,   0.0,  0.0,  0.0,  0.0]] # vent all
+p1 = 30 - 8 # 8 psi overshoot
+# p2 = 30.0
+# p3 = 10.0
+pres_seq = [[00.00, -1.0, -1.0,   20, -1.0], # inflate
+			[00.20, -1.0, -1.0,  0.0, -1.0], # vent
+			[01.00, -1.0, -1.0, -1.0, -1.0]] # seal
+
+# pres_seq = [[0.00,   -1,    p1,   p1,    -1], # inflate hips
+# 			[0.02,   p1,    p1,   p1,    p1], # inflate knees
+# 			[0.2,    -1,    -1,   -1,    -1], # seal
+# 			[0.6,     0,     0,    0,     0], # vent
+# 			[1.00,    -1,   -1,   -1,    -1]] # seal
+
+			# [05.05, -1.0, -1.0, -1.0, -1.0], # seal
+			# [05.10,   p2,   p2,   p2,   p2], # inflate 2
+			# [5.30,   0.0,  0.0,  0.0,  0.0], # vent at peak
+			# [5.40,   0.0, 10.0, 10.0,  0.0], # inflate hips for landing, continue knee vent
+			# [5.42,   0.0, -1.0, -1.0,  0.0], # seal	hips, continue knee vent		
+			# [6.40,   0.0,  0.0,  0.0,  0.0]] # vent all
 
 # 1.2:
 # pres_seq = [[00.000, -1.0, -1.0, -1.0, -1.0], # seal
@@ -52,10 +56,10 @@ p3 = 10.0
 # 			[05.134, -1.0, -1.0, -1.0, -1.0], # seal knees
 # 			[05.7,   -1.0, -1.0, -1.0, -1.0]] # end
 
-test_pres_seq = [[00.000,  p1,   -1.0, -1.0,   p1], # seal
-			     [00.5,    p1,     p2,   p2,   p1],
-				 [00.6,   0.0,    0.0,  0.0,  0.0],
-				 [01.2,  -1.0,   -1.0, -1.0, -1.0]]
+# test_pres_seq = [[00.000,  p1,   -1.0, -1.0,   p1], # seal
+# 			     [00.5,    p1,     p2,   p2,   p1],
+# 				 [00.6,   0.0,    0.0,  0.0,  0.0],
+# 				 [01.2,  -1.0,   -1.0, -1.0, -1.0]]
 
 vent_seq = 	 [[0.00, 00.0, 00.0, 00.0, 00.0], # vent all valves
 			  [3.0, -1.0, -1.0, -1.0, -1.0]] # seal all valves
@@ -104,6 +108,13 @@ class Controller:
 			rospy.sleep(pres_seq[-1][0]*2.5) # allow time for dump/plot
 
 
+	def setPressure(self, pres):
+		self.msg_tx.layout.dim[0].size = num_valves+1 # extra int for message type
+		self.msg_tx.data[0] = 0 # specify this is a pressure setpoint message type
+		self.msg_tx.data[1:(num_valves+1)] = pres # add pressures to message
+		self.pub_tx.publish(self.msg_tx) # publish message
+
+
 if __name__ == '__main__':  
 	rospy.init_node('pres_control', anonymous=True) # initialize ROS node
 	controller = Controller('mcu_tx') # create controller
@@ -115,8 +126,15 @@ if __name__ == '__main__':
 
 	rospy.set_param('/file_prefix', rospy.get_param('~file_prefix'))
 
-	controller.runPresSequence(test_pres_seq) # run pressure sequence
-	controller.runPresSequence(vent_seq, data_dump=False) # run pressure sequence
+	rospy.sleep(4) # time to get into position
+	controller.runPresSequence(pres_seq) # run pressure sequence
+
+	controller.setPressure([0, 0, 0, 0]) # vent
+	rospy.sleep(3) # allow vent time
+	controller.setPressure([-1, -1, -1, -1]) # seal
+
+
+	# controller.runPresSequence(vent_seq, data_dump=False) # run pressure sequence
 	print('done')
 
 	rospy.spin()
