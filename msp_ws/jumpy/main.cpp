@@ -8,7 +8,6 @@
 //****************************************************************************
 
 /* TODO:
- * - remove converter object from sense method
  * - add joint potentiometer code (initialization needed?)
  * - append f to floats
  */
@@ -37,7 +36,7 @@ bool g_flag_start_seq = 0;
 bool g_flag_valve_seq = 0;
 bool g_flag_dump = 0;
 
-volatile bool g_flag_sense = 0;
+volatile int g_flag_sense = 0;
 volatile bool g_flag_control = 0;
 volatile bool g_flag_transmit = 0;
 
@@ -107,7 +106,7 @@ void main(void) {
     while(1) {
         // start valve time sequence
         if (1 == g_flag_start_seq) {
-            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN2); // turn on external LED TODO
+            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN3); // turn on external LED
             g_t_valve_seq = 0;
             idx_seq = 0;
             idx_sense = 0;
@@ -120,12 +119,12 @@ void main(void) {
         // run valve time sequence
         if (1 == g_flag_valve_seq) {
             if (g_t_valve_seq >= valve_seq[idx_seq][0]) { // if at next time in sequence
-                std::copy(valve_seq[idx_seq], valve_seq[idx_seq]+4, pres_des); // update pressure setpoints
+                std::copy(valve_seq[idx_seq]+1, valve_seq[idx_seq]+1+NUM_VALVES, pres_des); // update pressure setpoints
                 controlUpdate(pres);
                 idx_seq++;
             }
             if (idx_seq == g_len_valve_seq) { // if at end of sequence
-                MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN2); // turn off external LED TODO
+                MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN3); // turn off external LED
                 n_sense = idx_sense;
                 g_flag_valve_seq = 0;
             }
@@ -149,32 +148,41 @@ void main(void) {
 
         // sense, control, receive, transmit
         if (g_flag_sense) {
-            sensorUpdate(idx_adc_pres, pres, lpf_coeffs);
 
-            if (g_flag_valve_seq) {
-                float s = 0.1f;
-                data_traj[idx_sense][0] = g_t_valve_seq;
-                data_traj[idx_sense][1] = sin(g_t_valve_seq) + (float)rand()/RAND_MAX*s; //pres[0][0]
-                data_traj[idx_sense][2] = sin(g_t_valve_seq-0.1f) + (float)rand()/RAND_MAX*s; //pres[1][0];
-                data_traj[idx_sense][3] = sin(g_t_valve_seq-0.2f) + (float)rand()/RAND_MAX*s; //pres[2][0];
-                data_traj[idx_sense][4] = sin(g_t_valve_seq-0.3f) + (float)rand()/RAND_MAX*s; //pres[3][0];
-                data_traj[idx_sense][5] = sin(g_t_valve_seq-0.4f) + (float)rand()/RAND_MAX*s; //pres[4][0];
-                idx_sense += 1;
-            }
-            if (!g_flag_valve_seq && !g_flag_dump) {
-                uart_tx[0] = g_len_valve_seq; //sin(g_t_valve_seq); //pres[0][0]
-                uart_tx[1] = sin(g_t_valve_seq-0.1f); //pres[1][0];
-                uart_tx[2] = sin(g_t_valve_seq-0.2f); //pres[2][0];
-                uart_tx[3] = sin(g_t_valve_seq-0.3f); //pres[3][0];
-                uart_tx[4] = sin(g_t_valve_seq-0.4f); //pres[4][0]
+            if (1 == g_flag_sense) {
+                MAP_ADC14_toggleConversionTrigger();
+                g_flag_sense = 2;
             }
 
-            g_flag_sense = 0;
+            if (!MAP_ADC14_isBusy()) {
+//                MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN5); // DEBUG
+                sensorUpdate(idx_adc_pres, pres, lpf_coeffs);
+//                MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN5); // DEBUG
+
+                if (g_flag_valve_seq) {
+//                    float s = 0.1f;
+                    data_traj[idx_sense][0] = g_t_valve_seq;
+                    data_traj[idx_sense][1] = pres[0][0]; //sin(g_t_valve_seq) + (float)rand()/RAND_MAX*s;
+                    data_traj[idx_sense][2] = pres[1][0]; //sin(g_t_valve_seq-0.1f) + (float)rand()/RAND_MAX*s;
+                    data_traj[idx_sense][3] = pres[2][0]; //sin(g_t_valve_seq-0.2f) + (float)rand()/RAND_MAX*s;
+                    data_traj[idx_sense][4] = pres[3][0]; //sin(g_t_valve_seq-0.3f) + (float)rand()/RAND_MAX*s;
+                    data_traj[idx_sense][5] = pres[4][0]; //sin(g_t_valve_seq-0.4f) + (float)rand()/RAND_MAX*s;
+                    idx_sense += 1;
+                }
+                if (!g_flag_valve_seq && !g_flag_dump) {
+                    uart_tx[0] = pres[0][0]; //sin(g_t_valve_seq);
+                    uart_tx[1] = pres[1][0]; //sin(g_t_valve_seq-0.1f);
+                    uart_tx[2] = pres[2][0]; //sin(g_t_valve_seq-0.2f);
+                    uart_tx[3] = pres[3][0]; //sin(g_t_valve_seq-0.3f);
+                    uart_tx[4] = pres[4][0]; //sin(g_t_valve_seq-0.4f);
+                }
+                g_flag_sense = 0;
+            }
         }
         if (g_flag_control) {
-            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN7);
+//            MAP_GPIO_setOutputHighOnPin(GPIO_PORT_P3, GPIO_PIN7); // DEBUG
             controlUpdate(pres);
-            MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P3, GPIO_PIN7); // toggle debug pin
+//            MAP_GPIO_setOutputLowOnPin(GPIO_PORT_P3, GPIO_PIN7); // DEBUG
             g_flag_control = 0; // clear flag
         }
         if (flag_receive) {
@@ -271,11 +279,6 @@ void receiveData(void) {
         }
         case 3: { // update valve time sequence array
             int idx_seq = ((int)uart_rx[0]) >> 8 & 255; // 2nd LSbyte indicates index pressure sequence
-
-//            if (1 == idx_seq) {
-//                MAP_GPIO_toggleOutputOnPin(GPIO_PORT_P1, GPIO_PIN0); // toggle red LED
-//            }
-
             g_len_valve_seq = idx_seq+1; // update sequence length
             start = uart_rx+1;
             std::copy(start, start+5, valve_seq[idx_seq]); // copy time + 4 pressure values into sequence array
@@ -298,8 +301,6 @@ void sensorUpdate(const int * idx_adc_pres, float pres[][LPF_ORDER+1],
     const float * lpf_coeffs) {
     /* Read sensors */
 
-    static Converter convert(ADC_RES12, 5.0, 3.3); // measurement converter
-
 //    // shift angle histories
 //    theta1[1] = theta1[0];
 //    theta2[1] = theta2[0];
@@ -309,8 +310,6 @@ void sensorUpdate(const int * idx_adc_pres, float pres[][LPF_ORDER+1],
 //    theta2[0] = -((float)(encCounts[1])*DEG_PER_COUNT + THETA_2_OFFSET); // convert wheel offset counts to angle
 
     // get ADC conversions
-    MAP_ADC14_toggleConversionTrigger(); // initiate a single conversion (trigger)
-    while(MAP_ADC14_isBusy()); // wait until ADC conversion complete
     uint16_t adc_conv[9]; // initialize array for ADC results
     for (int i = 0; i < 9; i++) {
         adc_conv[i] = ADC14->MEM[i];
@@ -326,10 +325,12 @@ void sensorUpdate(const int * idx_adc_pres, float pres[][LPF_ORDER+1],
 //        }
         idx_adc = idx_adc_pres[i]; // index corresponding to ADC channel used for pressure measurement
         if (i == 0) { // first (tank) transducer is old ASDX type
-            pres[i][0] = convert.intToFloat(adc_conv[idx_adc]*2, PRES_ASDXAVX100PGAA5); // convert and update pressure
+//            pres[i][0] = convert.intToFloat(adc_conv[idx_adc]*2, PRES_ASDXAVX100PGAA5); // convert and update pressure
+            pres[i][0] = 0.02014652014f*(float)adc_conv[idx_adc]*2 - 12.5f; //NOTE: x2 for voltage divider
         }
         else {
-            pres[i][0] = convert.intToFloat(adc_conv[idx_adc], PRES_SSCDRRN100PGAB5); // convert and update pressure
+//            pres[i][0] = convert.intToFloat(adc_conv[idx_adc], PRES_SSCDRRN100PGAB5); // convert and update pressure
+            pres[i][0] = 0.0179080179f*(float)adc_conv[idx_adc] - 5.55555555556f;
         }
 //        // calculate filtered pressures
 //        presFilt[i][1] = presFilt[i][0]; // shift filtered pressure histories
@@ -337,13 +338,6 @@ void sensorUpdate(const int * idx_adc_pres, float pres[][LPF_ORDER+1],
 //        for (int j = 0; j <= LPF_ORDER; j++) { // loop over pressure history TODO: coeffs or pres loop dir needs to be switched
 //            presFilt[i][0] = presFilt[i][0] + lpf_coeffs[j]*pres[i][j]; // calculate filtered value
 //        }
-
-    //DEBUG
-    pres[0][0] = 1.1f;
-    pres[1][0] = 2.2f;
-    pres[2][0] = 3.3f;
-    pres[3][0] = 4.4f;
-    pres[4][0] = 5.5f;
     }
 }
 
